@@ -1,0 +1,40 @@
+/* Website-Nexus PRO — VIP DARK GOD — @VIP_DARK_GOD */
+
+:root {
+  --bg-primary: #080a0f;
+  --bg-card: rgba(14, 17, 26, 0.85);
+  --border: rgba(255, 255, 255, 0.06);
+  --accent: #00f0ff;
+  --accent-2: #7c3aed;
+  --accent-3: #f43f5e;
+  --success: #10b981;
+  --warning: #f59e0b;
+  --danger: #f43f5e;
+  --text: #e2e8f0;
+  --text-muted: #64748b;
+  --font: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html { scroll-behavior: smooth; }
+
+body {
+  font-family: var(--font);
+  background: var(--bg-primary);
+  color: var(--text);
+  min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
+}
+
+a { color: var(--accent); text-decoration: none; transition: opacity 0.2s; }
+a:hover { opacity: 0.8; }
+
+/* Utils */
+.flex { display: flex; }
+.flex-center { align-items: center; justify-content: center; }
+.gap-2 { gap: 8px; }
+.gap-3 { gap: 12px; }
+.gap-4 { gap: 16px; }
+.text-center { text-align: center; }
+.text-muted { color: var(--text-muted); }

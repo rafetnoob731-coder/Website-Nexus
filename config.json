@@ -1,0 +1,29 @@
+{
+  "_comment": "Website-Nexus PRO — VIP DARK GOD — @VIP_DARK_GOD",
+  "panel": {
+    "name": "NEXUS PANEL",
+    "version": "5.0 PRO",
+    "developer": "VIP DARK GOD",
+    "telegram": "@VIP_DARK_GOD"
+  },
+  "server": {
+    "host": "0.0.0.0",
+    "port": 3522,
+    "debug": true,
+    "secret_key": "vip_dark_god_nexus_v5"
+  },
+  "auth": {
+    "admin_password": "5656",
+    "default_user_password": "codex123"
+  },
+  "limits": {
+    "max_file_size_mb": 50,
+    "max_log_lines": 2000,
+    "max_upload_size_mb": 50
+  },
+  "paths": {
+    "upload_dir": "uploads",
+    "log_dir": "logs",
+    "db_file": "database.json"
+  }
+}

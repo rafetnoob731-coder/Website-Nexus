@@ -1,0 +1,36 @@
+# Website-Nexus PRO — VIP DARK GOD — @VIP_DARK_GOD
+
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.egg-info/
+dist/
+build/
+
+# Logs
+logs/*.log
+logs/*.tmp
+
+# Database
+database.json
+database.json.tmp
+
+# Uploads
+uploads/
+
+# Environment
+.env
+.venv
+venv/
+env/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
