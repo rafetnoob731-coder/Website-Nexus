@@ -1,0 +1,23 @@
+# Website-Nexus PRO — VIP DARK GOD — @VIP_DARK_GOD
+# Render Blueprint — https://render.com/docs/blueprint-spec
+
+services:
+  - type: web
+    name: website-nexus
+    runtime: python
+    region: oregon
+    plan: free
+    branch: main
+    buildCommand: pip install -r requirements.txt
+    startCommand: gunicorn main:app --bind 0.0.0.0:$PORT --workers 2 --timeout 120 --access-logfile - --error-logfile -
+    envVars:
+      - key: FLASK_SECRET
+        generateValue: true
+      - key: ADMIN_PASS
+        value: "5656"
+      - key: DEBUG
+        value: "false"
+      - key: PORT
+        value: "10000"
+    healthCheckPath: /
+    autoDeploy: true
