@@ -1,0 +1,644 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>{{ project }} — File Manager | VIP DARK GOD</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg: #080a0f;
+      --card: rgba(14,17,26,.88);
+      --border: rgba(255,255,255,.06);
+      --accent: #00f0ff;
+      --accent2: #7c3aed;
+      --success: #10b981;
+      --danger: #f43f5e;
+      --warning: #f59e0b;
+      --text: #e2e8f0;
+      --muted: #64748b;
+      --sidebar-w: 280px;
+      --editor-bg: #0d1117;
+      --line-num: #484f58;
+    }
+    html, body { height: 100%; }
+    body {
+      font-family: 'Inter', -apple-system, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      overflow: hidden;
+    }
+    body::before {
+      content: '';
+      position: fixed; inset: 0; z-index: -1;
+      background: radial-gradient(ellipse at 70% 20%, rgba(0,240,255,.04) 0%, transparent 60%),
+                  radial-gradient(ellipse at 20% 80%, rgba(124,58,237,.06) 0%, transparent 50%);
+    }
+
+    /* === TOP BAR === */
+    .topbar {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 10px 16px;
+      background: var(--card); backdrop-filter: blur(16px);
+      border-bottom: 1px solid var(--border);
+      height: 52px; flex-shrink: 0;
+    }
+    .topbar-left { display: flex; align-items: center; gap: 12px; }
+    .topbar-left .back-btn {
+      width: 32px; height: 32px; border-radius: 8px;
+      border: 1px solid var(--border); background: transparent;
+      color: var(--text); cursor: pointer; font-size: 14px;
+      display: flex; align-items: center; justify-content: center;
+      transition: 0.2s; text-decoration: none;
+    }
+    .topbar-left .back-btn:hover { background: rgba(255,255,255,.06); border-color: var(--accent); color: var(--accent); }
+    .topbar-left h3 { font-size: 14px; font-weight: 700; }
+    .topbar-left h3 small { font-weight: 400; color: var(--muted); font-size: 11px; display: block; }
+    .topbar-right { display: flex; align-items: center; gap: 8px; }
+    .topbar-right .file-path {
+      font-size: 12px; color: var(--muted); font-family: 'JetBrains Mono', monospace;
+      background: rgba(255,255,255,.03); padding: 4px 10px; border-radius: 6px;
+      max-width: 300px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+    }
+    .topbar-btn {
+      padding: 6px 14px; border-radius: 8px; border: none;
+      font-weight: 600; font-size: 12px; font-family: inherit; cursor: pointer;
+      display: inline-flex; align-items: center; gap: 5px; transition: 0.2s; text-decoration: none;
+    }
+    .topbar-btn.save { background: linear-gradient(135deg, var(--accent), var(--accent2)); color: #fff; }
+    .topbar-btn.save:hover { box-shadow: 0 4px 20px rgba(0,240,255,.25); }
+    .topbar-btn.save:disabled { opacity: 0.4; cursor: not-allowed; }
+    .topbar-btn.newf { background: rgba(16,185,129,.12); color: var(--success); border: 1px solid rgba(16,185,129,.15); }
+    .topbar-btn.newf:hover { background: rgba(16,185,129,.20); }
+    .topbar-btn.delf { background: rgba(244,63,94,.10); color: var(--danger); border: 1px solid rgba(244,63,94,.12); }
+    .topbar-btn.delf:hover { background: rgba(244,63,94,.18); }
+
+    /* === LAYOUT === */
+    .layout {
+      display: flex; height: calc(100vh - 52px);
+    }
+
+    /* === SIDEBAR (file tree) === */
+    .sidebar {
+      width: var(--sidebar-w); min-width: var(--sidebar-w);
+      background: var(--card); backdrop-filter: blur(12px);
+      border-right: 1px solid var(--border);
+      display: flex; flex-direction: column; overflow: hidden;
+    }
+    .sidebar-header {
+      padding: 10px 14px; border-bottom: 1px solid var(--border);
+      font-size: 12px; font-weight: 700; color: var(--muted);
+      text-transform: uppercase; letter-spacing: 0.5px;
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .sidebar-header .btn-icon-s {
+      width: 26px; height: 26px; border-radius: 6px; border: none;
+      background: transparent; color: var(--muted); cursor: pointer;
+      font-size: 12px; transition: 0.2s; display: flex; align-items: center; justify-content: center;
+    }
+    .sidebar-header .btn-icon-s:hover { background: rgba(255,255,255,.06); color: var(--accent); }
+
+    .file-tree {
+      flex: 1; overflow-y: auto; padding: 6px 0;
+    }
+    .file-tree::-webkit-scrollbar { width: 4px; }
+    .file-tree::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+
+    .tree-item {
+      display: flex; align-items: center; gap: 8px;
+      padding: 6px 14px; cursor: pointer; font-size: 13px;
+      transition: 0.1s; user-select: none;
+      border-left: 2px solid transparent;
+    }
+    .tree-item:hover { background: rgba(255,255,255,.03); }
+    .tree-item.active { background: rgba(0,240,255,.06); border-left-color: var(--accent); color: var(--accent); }
+    .tree-item i { width: 16px; text-align: center; font-size: 13px; flex-shrink: 0; }
+    .tree-item .name {
+      overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+    }
+    .tree-item .folder-arrow { font-size: 10px; width: 14px; transition: 0.2s; }
+    .tree-item .folder-arrow.open { transform: rotate(90deg); }
+    .tree-children { padding-left: 16px; }
+
+    /* === EDITOR === */
+    .editor-panel {
+      flex: 1; display: flex; flex-direction: column;
+      background: var(--editor-bg); overflow: hidden;
+    }
+    .editor-tabs {
+      display: flex; align-items: center; height: 36px;
+      background: rgba(255,255,255,.02); border-bottom: 1px solid var(--border);
+      padding: 0 8px; overflow-x: auto; gap: 2px; flex-shrink: 0;
+    }
+    .editor-tabs::-webkit-scrollbar { height: 2px; }
+    .editor-tabs::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+    .tab-item {
+      display: flex; align-items: center; gap: 6px;
+      padding: 6px 12px; font-size: 12px; border-radius: 6px 6px 0 0;
+      cursor: pointer; color: var(--muted); transition: 0.1s;
+      white-space: nowrap; border-bottom: 2px solid transparent;
+    }
+    .tab-item.active { color: var(--text); background: rgba(255,255,255,.03); border-bottom-color: var(--accent); }
+    .tab-item:hover { color: var(--text); }
+    .tab-item .close-tab {
+      font-size: 10px; opacity: 0; transition: 0.15s; cursor: pointer;
+      width: 16px; height: 16px; border-radius: 4px;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .tab-item:hover .close-tab { opacity: 0.5; }
+    .tab-item .close-tab:hover { opacity: 1; background: rgba(255,255,255,.08); }
+
+    .editor-body {
+      flex: 1; display: flex; position: relative; overflow: hidden;
+    }
+    .editor-gutter {
+      width: 52px; flex-shrink: 0;
+      background: rgba(255,255,255,.01);
+      border-right: 1px solid var(--border);
+      padding: 10px 0; text-align: right;
+      font-family: 'JetBrains Mono', monospace; font-size: 13px;
+      line-height: 1.6; color: var(--line-num); overflow: hidden;
+      user-select: none;
+    }
+    .editor-gutter div { padding-right: 14px; }
+
+    .editor-textarea-wrap {
+      flex: 1; position: relative; overflow: auto;
+    }
+    .editor-textarea-wrap::-webkit-scrollbar { width: 6px; height: 6px; }
+    .editor-textarea-wrap::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+    .editor-textarea-wrap::-webkit-scrollbar-track { background: transparent; }
+
+    #editorTextarea {
+      width: 100%; min-height: 100%;
+      padding: 10px 16px; border: none; outline: none; resize: none;
+      background: transparent; color: #e2e8f0;
+      font-family: 'JetBrains Mono', monospace; font-size: 13px;
+      line-height: 1.6; tab-size: 2;
+      white-space: pre; overflow-wrap: normal;
+    }
+    #editorTextarea:focus { background: rgba(255,255,255,.005); }
+
+    .editor-empty {
+      flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center;
+      color: var(--muted); gap: 10px;
+    }
+    .editor-empty i { font-size: 48px; opacity: 0.2; }
+    .editor-empty p { font-size: 14px; opacity: 0.6; }
+
+    /* === CREATE MODAL === */
+    .modal-overlay {
+      display: none; position: fixed; inset: 0; z-index: 200;
+      background: rgba(0,0,0,.6); backdrop-filter: blur(6px);
+      align-items: center; justify-content: center;
+    }
+    .modal-overlay.active { display: flex; }
+    .modal-box {
+      background: var(--card); border: 1px solid var(--border);
+      border-radius: 16px; padding: 24px; width: 100%; max-width: 360px;
+      box-shadow: 0 20px 60px rgba(0,0,0,.6);
+    }
+    .modal-box h3 { font-size: 15px; font-weight: 700; margin-bottom: 16px; display: flex; align-items: center; gap: 8px; }
+    .modal-box input, .modal-box select {
+      width: 100%; padding: 10px 14px; border-radius: 10px;
+      border: 1px solid var(--border); background: rgba(0,0,0,.3);
+      color: var(--text); font-size: 14px; font-family: inherit;
+      outline: none; margin-bottom: 12px;
+    }
+    .modal-box input:focus { border-color: var(--accent); }
+    .modal-actions { display: flex; gap: 8px; justify-content: flex-end; }
+
+    .toast-container {
+      position: fixed; top: 60px; right: 20px; z-index: 999;
+      display: flex; flex-direction: column; gap: 8px;
+    }
+    .toast {
+      padding: 10px 18px; border-radius: 10px; font-size: 13px; font-weight: 500;
+      backdrop-filter: blur(12px); border-left: 3px solid;
+      animation: toastIn .3s ease;
+      box-shadow: 0 8px 30px rgba(0,0,0,.5);
+    }
+    .toast.success { background: rgba(16,185,129,.15); border-color: var(--success); color: var(--success); }
+    .toast.error { background: rgba(244,63,94,.15); border-color: var(--danger); color: var(--danger); }
+    .toast.info { background: rgba(0,240,255,.10); border-color: var(--accent); color: var(--accent); }
+
+    @keyframes toastIn { from { opacity:0; transform:translateX(40px); } to { opacity:1; transform:translateX(0); } }
+
+    @media (max-width: 768px) {
+      :root { --sidebar-w: 48px; }
+      .sidebar { min-width: 48px; }
+      .sidebar .tree-item .name { display: none; }
+      .sidebar .tree-children { padding-left: 0; }
+      .sidebar .tree-item .folder-arrow { display: none; }
+      .sidebar-header span { display: none; }
+      .topbar-right .file-path { display: none; }
+    }
+  </style>
+</head>
+<body>
+<!-- Top Bar -->
+<div class="topbar">
+  <div class="topbar-left">
+    <a href="/" class="back-btn"><i class="fa-solid fa-arrow-left"></i></a>
+    <div>
+      <h3><i class="fa-solid fa-folder-open" style="color:var(--accent);margin-right:6px;"></i>{{ project }}
+      <small>{{ username }} / {{ project }}</small></h3>
+    </div>
+  </div>
+  <div class="topbar-right">
+    <span class="file-path" id="filePathDisplay">No file selected</span>
+    <button class="topbar-btn newf" onclick="showCreateModal()"><i class="fa-solid fa-plus"></i> New</button>
+    <button class="topbar-btn delf" onclick="deleteCurrentFile()"><i class="fa-solid fa-trash-can"></i> Delete</button>
+    <button class="topbar-btn save" id="saveBtn" onclick="saveFile()" disabled><i class="fa-solid fa-floppy-disk"></i> Save</button>
+  </div>
+</div>
+
+<!-- Layout -->
+<div class="layout">
+  <!-- Sidebar -->
+  <div class="sidebar">
+    <div class="sidebar-header">
+      <span>Files</span>
+      <button class="btn-icon-s" onclick="showCreateModal()" title="New file/folder"><i class="fa-solid fa-plus"></i></button>
+    </div>
+    <div class="file-tree" id="fileTree">
+      <div style="text-align:center;padding:20px;color:var(--muted);font-size:13px;">
+        <i class="fa-solid fa-spinner fa-spin"></i> Loading...
+      </div>
+    </div>
+  </div>
+
+  <!-- Editor -->
+  <div class="editor-panel">
+    <div class="editor-tabs" id="editorTabs"></div>
+    <div class="editor-body">
+      <div class="editor-gutter" id="editorGutter"></div>
+      <div class="editor-textarea-wrap" id="editorWrap">
+        <div class="editor-empty" id="editorEmpty">
+          <i class="fa-regular fa-file-code"></i>
+          <p>Select a file from the tree to start editing</p>
+        </div>
+        <textarea id="editorTextarea" style="display:none;" spellcheck="false"></textarea>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Create Modal -->
+<div class="modal-overlay" id="createModal">
+  <div class="modal-box">
+    <h3><i class="fa-solid fa-plus-circle" style="color:var(--accent);"></i> Create New</h3>
+    <select id="createType">
+      <option value="file">File</option>
+      <option value="folder">Folder</option>
+    </select>
+    <input type="text" id="createName" placeholder="Enter name..." autocomplete="off" />
+    <div class="modal-actions">
+      <button class="btn topbar-btn delf" onclick="closeCreateModal()" style="border:1px solid var(--border);background:transparent;">Cancel</button>
+      <button class="btn topbar-btn save" onclick="createItem()">Create</button>
+    </div>
+  </div>
+</div>
+
+<!-- Toast container -->
+<div class="toast-container" id="toastContainer"></div>
+
+<script>
+  const PROJECT = '{{ project }}';
+  let openFiles = {};        // { path: content }
+  let activeFile = null;     // current path
+  let fileTreeData = [];     // for reference
+  let currentDir = '';       // for creating files in context
+
+  // === TOAST ===
+  function toast(msg, type = 'info') {
+    const el = document.createElement('div');
+    el.className = 'toast ' + type;
+    el.textContent = msg;
+    document.getElementById('toastContainer').appendChild(el);
+    setTimeout(() => { el.style.opacity = '0'; el.style.transition = '0.3s'; setTimeout(() => el.remove(), 300); }, 3000);
+  }
+
+  // === MODAL ===
+  function showCreateModal() {
+    document.getElementById('createModal').classList.add('active');
+    document.getElementById('createName').value = '';
+    document.getElementById('createName').focus();
+  }
+  function closeCreateModal() { document.getElementById('createModal').classList.remove('active'); }
+  document.getElementById('createModal').addEventListener('click', e => { if (e.target === e.currentTarget) closeCreateModal(); });
+  document.getElementById('createName').addEventListener('keydown', e => { if (e.key === 'Enter') createItem(); if (e.key === 'Escape') closeCreateModal(); });
+
+  // === LOAD FILE TREE ===
+  async function loadTree() {
+    const treeEl = document.getElementById('fileTree');
+    treeEl.innerHTML = '<div style="text-align:center;padding:20px;color:var(--muted);font-size:13px;"><i class="fa-solid fa-spinner fa-spin"></i> Loading...</div>';
+    try {
+      const res = await fetch('/api/list-files/' + PROJECT);
+      const data = await res.json();
+      const files = data.files || [];
+      const tree = buildTree(files);
+      fileTreeData = tree;
+      treeEl.innerHTML = renderTree(tree, '');
+    } catch (e) {
+      treeEl.innerHTML = '<div style="text-align:center;padding:20px;color:var(--danger);">Failed to load files</div>';
+    }
+  }
+
+  function buildTree(paths) {
+    const root = {};
+    for (const p of paths) {
+      const parts = p.split('/');
+      let node = root;
+      for (let i = 0; i < parts.length; i++) {
+        const isFile = i === parts.length - 1;
+        if (!node[parts[i]]) {
+          node[parts[i]] = isFile ? { __type: 'file' } : { __type: 'folder', __children: {} };
+        }
+        if (!isFile) node = node[parts[i]].__children;
+      }
+    }
+    return root;
+  }
+
+  function renderTree(node, basePath) {
+    const entries = Object.entries(node).sort(([a, av], [b, bv]) => {
+      const aIsFolder = av.__type === 'folder';
+      const bIsFolder = bv.__type === 'folder';
+      if (aIsFolder && !bIsFolder) return -1;
+      if (!aIsFolder && bIsFolder) return 1;
+      return a.localeCompare(b);
+    });
+
+    let html = '';
+    for (const [name, val] of entries) {
+      const isFolder = val.__type === 'folder';
+      const path = basePath ? basePath + '/' + name : name;
+      if (isFolder) {
+        const children = val.__children || {};
+        const hasVisible = Object.keys(children).length > 0;
+        html += `<div class="tree-folder">`;
+        html += `<div class="tree-item folder-item" onclick="toggleFolder(this, '${path}')" data-path="${path}">`;
+        html += `<span class="folder-arrow ${hasVisible ? '' : 'open'}"><i class="fa-solid fa-chevron-right"></i></span>`;
+        html += `<i class="fa-solid fa-folder" style="color:var(--warning);"></i>`;
+        html += `<span class="name">${name}</span>`;
+        html += `</div>`;
+        html += `<div class="tree-children" style="display:${hasVisible ? 'none' : 'block'};">`;
+        html += renderTree(children, path);
+        html += `</div></div>`;
+      } else {
+        html += `<div class="tree-item" onclick="openFile('${path}')" data-path="${path}">`;
+        html += `<span class="folder-arrow" style="visibility:hidden;"><i class="fa-solid fa-chevron-right"></i></span>`;
+        const ext = name.split('.').pop().toLowerCase();
+        let icon = 'fa-solid fa-file';
+        if (['py'].includes(ext)) icon = 'fa-brands fa-python';
+        else if (['js','ts','jsx','tsx'].includes(ext)) icon = 'fa-brands fa-js';
+        else if (['html','htm'].includes(ext)) icon = 'fa-brands fa-html5';
+        else if (['css','scss','sass','less'].includes(ext)) icon = 'fa-brands fa-css3-alt';
+        else if (['json','xml','yaml','yml','toml'].includes(ext)) icon = 'fa-solid fa-code';
+        else if (['md','txt','log'].includes(ext)) icon = 'fa-regular fa-file-lines';
+        else if (['png','jpg','jpeg','gif','svg','ico'].includes(ext)) icon = 'fa-regular fa-image';
+        else if (['zip','tar','gz','rar','7z'].includes(ext)) icon = 'fa-regular fa-file-zipper';
+        html += `<i class="${icon}" style="color:var(--muted);"></i>`;
+        html += `<span class="name">${name}</span>`;
+        html += `</div>`;
+      }
+    }
+    return html;
+  }
+
+  function toggleFolder(el, path) {
+    const children = el.parentElement.querySelector('.tree-children');
+    const arrow = el.querySelector('.folder-arrow');
+    if (children) {
+      const isHidden = children.style.display === 'none';
+      children.style.display = isHidden ? 'block' : 'none';
+      if (arrow) arrow.classList.toggle('open');
+    }
+  }
+
+  // === FILE OPERATIONS ===
+  async function openFile(path) {
+    // Highlight in tree
+    document.querySelectorAll('.tree-item.active').forEach(e => e.classList.remove('active'));
+    document.querySelector(`.tree-item[data-path="${path}"]`)?.classList.add('active');
+
+    document.getElementById('filePathDisplay').textContent = '/' + path;
+    currentDir = path.split('/').slice(0, -1).join('/');
+
+    // If already open, switch to it
+    if (openFiles[path] !== undefined) {
+      activeFile = path;
+      renderEditor();
+      renderTabs();
+      return;
+    }
+
+    try {
+      const res = await fetch('/api/read-file', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ project: PROJECT, filename: path })
+      });
+      const data = await res.json();
+      if (data.error) { toast(data.error, 'error'); return; }
+      openFiles[path] = data.content || '';
+      activeFile = path;
+      renderEditor();
+      renderTabs();
+      document.getElementById('saveBtn').disabled = false;
+    } catch (e) {
+      toast('Failed to read file', 'error');
+    }
+  }
+
+  function renderTabs() {
+    const container = document.getElementById('editorTabs');
+    const paths = Object.keys(openFiles);
+    if (paths.length === 0) { container.innerHTML = ''; return; }
+    container.innerHTML = paths.map(p => {
+      const name = p.split('/').pop();
+      const active = p === activeFile ? 'active' : '';
+      return `<div class="tab-item ${active}" onclick="switchTab('${p}')" data-tab="${p}">
+        <span>${name}</span>
+        <span class="close-tab" onclick="event.stopPropagation(); closeTab('${p}')"><i class="fa-solid fa-xmark"></i></span>
+      </div>`;
+    }).join('');
+    // scroll into view
+    const activeTab = container.querySelector('.tab-item.active');
+    if (activeTab) activeTab.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
+  }
+
+  function switchTab(path) {
+    activeFile = path;
+    renderEditor();
+    renderTabs();
+    // highlight tree
+    document.querySelectorAll('.tree-item.active').forEach(e => e.classList.remove('active'));
+    document.querySelector(`.tree-item[data-path="${path}"]`)?.classList.add('active');
+    document.getElementById('filePathDisplay').textContent = '/' + path;
+  }
+
+  function closeTab(path) {
+    delete openFiles[path];
+    if (activeFile === path) {
+      const keys = Object.keys(openFiles);
+      activeFile = keys.length > 0 ? keys[keys.length - 1] : null;
+    }
+    renderEditor();
+    renderTabs();
+    if (!activeFile) {
+      document.getElementById('saveBtn').disabled = true;
+      document.getElementById('filePathDisplay').textContent = 'No file selected';
+    }
+  }
+
+  function renderEditor() {
+    const textarea = document.getElementById('editorTextarea');
+    const gutter = document.getElementById('editorGutter');
+    const empty = document.getElementById('editorEmpty');
+    const wrap = document.getElementById('editorWrap');
+
+    if (!activeFile || openFiles[activeFile] === undefined) {
+      textarea.style.display = 'none';
+      gutter.innerHTML = '';
+      empty.style.display = 'flex';
+      return;
+    }
+    empty.style.display = 'none';
+    textarea.style.display = 'block';
+    content = openFiles[activeFile] || '';
+    textarea.value = content;
+    updateGutter();
+    textarea.focus();
+  }
+
+  function updateGutter() {
+    const textarea = document.getElementById('editorTextarea');
+    const gutter = document.getElementById('editorGutter');
+    const lines = textarea.value.split('\n').length;
+    gutter.innerHTML = Array.from({ length: lines }, (_, i) => `<div>${i + 1}</div>`).join('');
+  }
+
+  // Sync gutter on input
+  document.addEventListener('DOMContentLoaded', () => {
+    const textarea = document.getElementById('editorTextarea');
+    if (textarea) {
+      textarea.addEventListener('input', () => {
+        if (activeFile) {
+          openFiles[activeFile] = textarea.value;
+        }
+        updateGutter();
+      });
+      textarea.addEventListener('scroll', () => {
+        document.getElementById('editorGutter').scrollTop = textarea.scrollTop;
+      });
+    }
+  });
+
+  // === SAVE ===
+  async function saveFile() {
+    if (!activeFile) return;
+    const content = document.getElementById('editorTextarea').value;
+    try {
+      const res = await fetch('/api/save-file', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ project: PROJECT, filename: activeFile, content })
+      });
+      const data = await res.json();
+      if (data.status === 'success') {
+        openFiles[activeFile] = content;
+        toast('Saved: ' + activeFile.split('/').pop(), 'success');
+      } else {
+        toast(data.error || 'Save failed', 'error');
+      }
+    } catch (e) {
+      toast('Save failed', 'error');
+    }
+  }
+
+  // Ctrl+S save
+  document.addEventListener('keydown', e => {
+    if ((e.ctrlKey || e.metaKey) && e.key === 's') {
+      e.preventDefault();
+      saveFile();
+    }
+  });
+
+  // === DELETE ===
+  async function deleteCurrentFile() {
+    if (!activeFile) return;
+    if (!confirm('Delete "' + activeFile.split('/').pop() + '"?')) return;
+    try {
+      const res = await fetch('/api/delete-file', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ project: PROJECT, filename: activeFile })
+      });
+      const data = await res.json();
+      if (data.status === 'deleted') {
+        toast('Deleted: ' + activeFile.split('/').pop(), 'success');
+        closeTab(activeFile);
+        loadTree();
+      } else {
+        toast('Delete failed', 'error');
+      }
+    } catch (e) {
+      toast('Delete failed', 'error');
+    }
+  }
+
+  // === CREATE ===
+  async function createItem() {
+    const type = document.getElementById('createType').value;
+    let name = document.getElementById('createName').value.trim();
+    if (!name) { toast('Enter a name', 'error'); return; }
+
+    // Determine parent dir: use active file's dir or root
+    let parentDir = '';
+    if (currentDir) parentDir = currentDir;
+    else if (activeFile) {
+      const parts = activeFile.split('/');
+      parts.pop();
+      parentDir = parts.join('/');
+    }
+
+    const fullPath = parentDir ? parentDir + '/' + name : name;
+
+    if (type === 'folder') {
+      // Can't do much with folders via API, but we can create a dummy file to represent it
+      toast('Folders are auto-managed. Place a file inside to create the folder.', 'info');
+      closeCreateModal();
+      return;
+    }
+
+    // Create file with empty content
+    try {
+      const res = await fetch('/api/save-file', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ project: PROJECT, filename: fullPath, content: '' })
+      });
+      const data = await res.json();
+      if (data.status === 'success') {
+        toast('Created: ' + name, 'success');
+        closeCreateModal();
+        loadTree();
+        openFile(fullPath);
+      } else {
+        toast(data.error || 'Create failed', 'error');
+      }
+    } catch (e) {
+      toast('Create failed', 'error');
+    }
+  }
+
+  // === INIT ===
+  loadTree();
+</script>
+</body>
+</html>

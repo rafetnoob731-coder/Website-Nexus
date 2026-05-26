@@ -111,6 +111,8 @@ def _default_db() -> dict:
     return {
         "user_pw": "codex123",
         "users": {},
+        "user_expiry": {},
+        "user_created": {},
         "start_times": {},
         "banned_users": [],
         "created_at": int(time.time() * 1000)
@@ -127,6 +129,8 @@ def load_db() -> dict:
         for key in ("users", "start_times", "banned_users"):
             data.setdefault(key, {} if key != "banned_users" else [])
         data.setdefault("user_pw", "codex123")
+        data.setdefault("user_expiry", {})
+        data.setdefault("user_created", {})
         return data
     except (json.JSONDecodeError, OSError) as exc:
         logger.warning("DB corrupt, resetting: %s", exc)
@@ -233,6 +237,12 @@ def login():
                 save_db(db)
 
             if username and password == db["users"].get(username):
+                expiry = db.get("user_expiry", {}).get(username)
+                if expiry and int(time.time() * 1000) > expiry:
+                    return render_template_string(
+                        '<h2 style="color:var(--danger);text-align:center;margin-top:4em;font-family:sans-serif;">'
+                        'Account expired.<br><small style="color:var(--muted);">Contact admin to renew.</small></h2>'
+                    ), 403
                 session["is_admin"]  = False
                 session["username"]  = username
                 session["login_ip"]  = ip_hash
@@ -268,6 +278,23 @@ ADMIN_HTML = (Config.TEMPLATE_DIR / "admin.html").read_text(encoding="utf-8") \
 @admin_required
 def admin_panel():
     db = load_db()
+    now_ms = int(time.time() * 1000)
+    expiry_info = {}
+    for u in db.get("users", {}):
+        exp = db.get("user_expiry", {}).get(u)
+        if exp:
+            remaining_days = max(0, int((exp - now_ms) / (86400 * 1000)))
+            remaining_hours = max(0, int((exp - now_ms) / (3600 * 1000)))
+            expired = now_ms > exp
+            expiry_info[u] = {
+                "expiry_ms": exp,
+                "remaining_days": remaining_days,
+                "remaining_hours": remaining_hours,
+                "expired": expired
+            }
+        else:
+            expiry_info[u] = None
+
     return render_template_string(
         ADMIN_HTML,
         users=db["users"],
@@ -276,7 +303,10 @@ def admin_panel():
         total_bots=sum(
             1 for p in processes.values()
             if p is not None and p.poll() is None
-        )
+        ),
+        expiry_info=expiry_info,
+        user_created=db.get("user_created", {}),
+        now_ms=now_ms
     )
 
 
@@ -302,6 +332,35 @@ def admin_change_pw():
         db["users"][username] = new_pw
         save_db(db)
         logger.info("Password changed for %s by admin", username)
+    return redirect(url_for("admin_panel"))
+
+
+@app.route("/admin/add_user", methods=["POST"])
+@admin_required
+def admin_add_user():
+    db = load_db()
+    username = sanitize_filename(request.form.get("username", "").strip())
+    password = request.form.get("password", "").strip()
+    days    = request.form.get("days", "0").strip()
+
+    if not username or not password or username == "admin":
+        return redirect(url_for("admin_panel"))
+
+    try:
+        days_int = max(0, int(days))
+    except ValueError:
+        days_int = 0
+
+    db["users"][username] = password
+    db["user_created"][username] = int(time.time() * 1000)
+
+    if days_int > 0:
+        db["user_expiry"][username] = int(time.time() * 1000) + (days_int * 86400 * 1000)
+    else:
+        db["user_expiry"].pop(username, None)
+
+    save_db(db)
+    logger.info("Admin created user %s (expiry: %d days)", username, days_int)
     return redirect(url_for("admin_panel"))
 
 
@@ -376,6 +435,20 @@ def index():
                 "running": running
             })
     return render_template("dashboard.html", apps=apps, username=username)
+
+
+@app.route("/files/<project>")
+@login_required
+def file_manager(project: str):
+    project = sanitize_filename(project)
+    extract_dir = Config.UPLOAD_DIR / session["username"] / project / "extracted"
+    if not is_safe_path(Config.UPLOAD_DIR / session["username"], extract_dir):
+        return redirect(url_for("index"))
+    return render_template(
+        "files.html",
+        project=project,
+        username=session["username"]
+    )
 
 
 # ---------------------------------------------------------------------------
@@ -458,8 +531,87 @@ def api_delete_file():
     if not is_safe_path(base, target) or not target.exists():
         return jsonify({"status": "error", "error": "Not found"}), 404
 
-    target.unlink()
+    if target.is_dir():
+        shutil.rmtree(target)
+    else:
+        target.unlink()
     return jsonify({"status": "deleted"})
+
+
+@app.route("/api/create-file", methods=["POST"])
+@login_required
+@json_required
+def api_create_file():
+    data = request.json
+    project  = sanitize_filename(data.get("project", ""))
+    filename = data.get("filename", "")
+
+    base   = Config.UPLOAD_DIR / session["username"]
+    target = base / project / "extracted" / filename.lstrip("/")
+
+    if not is_safe_path(base, target):
+        return jsonify({"status": "error", "error": "Access denied"}), 403
+
+    if target.exists():
+        return jsonify({"status": "error", "error": "Already exists"}), 409
+
+    try:
+        if filename.endswith("/") or data.get("type") == "folder":
+            target.mkdir(parents=True, exist_ok=True)
+        else:
+            target.parent.mkdir(parents=True, exist_ok=True)
+            target.write_text("", encoding="utf-8")
+        return jsonify({"status": "created"})
+    except Exception as exc:
+        return jsonify({"status": "error", "error": str(exc)}), 500
+
+
+@app.route("/api/rename-file", methods=["POST"])
+@login_required
+@json_required
+def api_rename_file():
+    data = request.json
+    project   = sanitize_filename(data.get("project", ""))
+    old_path  = data.get("oldPath", "")
+    new_path  = data.get("newPath", "")
+
+    base   = Config.UPLOAD_DIR / session["username"]
+    source = base / project / "extracted" / old_path.lstrip("/")
+    dest   = base / project / "extracted" / new_path.lstrip("/")
+
+    if not is_safe_path(base, source) or not is_safe_path(base, dest):
+        return jsonify({"status": "error", "error": "Access denied"}), 403
+
+    if not source.exists():
+        return jsonify({"status": "error", "error": "Not found"}), 404
+
+    try:
+        dest.parent.mkdir(parents=True, exist_ok=True)
+        source.rename(dest)
+        return jsonify({"status": "renamed"})
+    except Exception as exc:
+        return jsonify({"status": "error", "error": str(exc)}), 500
+
+
+@app.route("/api/list-tree/<project>")
+@login_required
+def api_list_tree(project: str):
+    extract_dir = _user_project_path(session["username"], project)
+    if not is_safe_path(Config.UPLOAD_DIR / session["username"], extract_dir):
+        return jsonify({"tree": [], "error": "Access denied"}), 403
+
+    def build_tree(path: Path) -> list:
+        items = []
+        if not path.exists():
+            return items
+        for entry in sorted(path.iterdir()):
+            item = {"name": entry.name, "type": "folder" if entry.is_dir() else "file"}
+            if entry.is_dir():
+                item["children"] = build_tree(entry)
+            items.append(item)
+        return items
+
+    return jsonify({"tree": build_tree(extract_dir)})
 
 
 # ---------------------------------------------------------------------------

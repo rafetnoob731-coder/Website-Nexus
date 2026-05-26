@@ -268,6 +268,7 @@
           <a href="/stop/{{ app.name }}" class="stop"><i class="fa-solid fa-stop"></i> Stop</a>
         {% endif %}
         <a href="/restart/{{ app.name }}" class="restart"><i class="fa-solid fa-rotate"></i> Restart</a>
+        <a href="/files/{{ app.name }}" class="edit"><i class="fa-solid fa-code"></i> Files</a>
         <a href="#" class="edit" onclick="openLog('{{ app.name }}'); return false;"><i class="fa-regular fa-file-lines"></i> Logs</a>
         <a href="/download/{{ app.name }}" class="dl"><i class="fa-solid fa-download"></i> ZIP</a>
         <a href="/delete/{{ app.name }}" class="del" onclick="return confirm('Delete this project permanently?')"><i class="fa-solid fa-trash-can"></i> Delete</a>
