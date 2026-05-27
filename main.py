@@ -574,6 +574,10 @@ def index():
         if entry.is_dir():
             p = processes.get((username, entry.name))
             running = p is not None and p.poll() is None
+            if not running:
+                pid = load_db().get("process_pids", {}).get(f"{username}_{entry.name}")
+                if pid and _is_pid_alive(pid):
+                    running = True
             apps.append({
                 "name": entry.name,
                 "running": running
@@ -815,19 +819,50 @@ def api_list_tree(project: str):
 # Project lifecycle
 # ---------------------------------------------------------------------------
 
+def _is_pid_alive(pid: int) -> bool:
+    try:
+        os.kill(pid, 0)
+        return True
+    except OSError:
+        return False
+
+def _get_process_key(key: tuple[str, str]) -> tuple[str, str]:
+    return (key[0], key[1])
+
+def _check_process(key: tuple[str, str]) -> subprocess.Popen | None:
+    """Check if process is alive — tries in-memory dict first, then PID from DB."""
+    p = processes.get(key)
+    if p is not None and p.poll() is None:
+        return p
+    db = load_db()
+    pid = db.get("process_pids", {}).get(f"{key[0]}_{key[1]}")
+    if pid and _is_pid_alive(pid):
+        return p  # might be None but that's OK — process is alive
+    return None
+
 def _stop_process(key: tuple[str, str]) -> None:
     p = processes.pop(key, None)
-    if p:
+    pid_to_kill = p.pid if p else None
+    if not pid_to_kill:
+        db = load_db()
+        pid_to_kill = db.get("process_pids", {}).get(f"{key[0]}_{key[1]}")
+    if pid_to_kill:
         with suppress(Exception):
             if os.name == "nt":
                 subprocess.Popen(
-                    f"taskkill /F /T /PID {p.pid}",
+                    f"taskkill /F /T /PID {pid_to_kill}",
                     shell=True,
                     stdout=subprocess.DEVNULL,
                     stderr=subprocess.DEVNULL
                 )
             else:
-                os.killpg(os.getpgid(p.pid), signal.SIGKILL)
+                try:
+                    os.killpg(os.getpgid(pid_to_kill), signal.SIGKILL)
+                except ProcessLookupError:
+                    os.kill(pid_to_kill, signal.SIGKILL)
+        db = load_db()
+        db.setdefault("process_pids", {}).pop(f"{key[0]}_{key[1]}", None)
+        save_db(db)
     fh = file_handles.pop(key, None)
     if fh:
         with suppress(Exception):
@@ -856,6 +891,11 @@ def run_project(project: str):
 
     # If already running do nothing
     if key in processes and processes[key].poll() is None:
+        return redirect(url_for("index"))
+    # Also check via DB PID (cross-worker)
+    db = load_db()
+    pid_check = db.get("process_pids", {}).get(f"{username}_{project}")
+    if pid_check and _is_pid_alive(pid_check):
         return redirect(url_for("index"))
 
     if not extract_dir.exists():
@@ -908,6 +948,7 @@ def run_project(project: str):
 
         db = load_db()
         db["start_times"][f"{username}_{project}"] = int(time.time() * 1000)
+        db.setdefault("process_pids", {})[f"{username}_{project}"] = processes[key].pid
         save_db(db)
 
         logger.info("Project %s/%s started (PID=%d)", username, project, processes[key].pid)
@@ -979,7 +1020,12 @@ def get_log(project: str):
         log_content = "\n".join(lines[-Config.MAX_LOG_LINES:])
 
     p = processes.get((username, project))
-    is_running = p is not None and p.poll() is None
+    is_running = (p is not None and p.poll() is None)
+    if not is_running:
+        db2 = load_db()
+        pid = db2.get("process_pids", {}).get(f"{username}_{project}")
+        if pid and _is_pid_alive(pid):
+            is_running = True
     db = load_db()
 
     return jsonify({
