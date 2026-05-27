@@ -23,12 +23,18 @@
       --muted: #64748b;
     }
 
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.08); border-radius: 3px; }
+    ::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.15); }
+
     body {
       font-family: 'Inter', -apple-system, sans-serif;
       background: var(--bg);
       color: var(--text);
       min-height: 100vh;
       padding: 20px;
+      overflow-y: auto;
     }
 
     body::before {
@@ -271,7 +277,13 @@
           </div>
         </div>
         <div class="user-meta">
-          <span><i class="fa-regular fa-calendar"></i> Created: {% if user_created.get(u_name) %}{{ user_created.get(u_name) | string }}{% else %}N/A{% endif %}</span>
+          <span><i class="fa-regular fa-calendar"></i> Created: {% if user_created.get(u_name) %}<span class="fmt-date" data-ts="{{ user_created.get(u_name) }}">{{ user_created.get(u_name) }}</span>{% else %}N/A{% endif %}</span>
+          {% if user_last_login.get(u_name) %}
+          <span><i class="fa-regular fa-clock"></i> Last login: <span class="fmt-date" data-ts="{{ user_last_login.get(u_name) }}">{{ user_last_login.get(u_name) }}</span></span>
+          {% endif %}
+          {% if user_disk and user_disk.get(u_name) is not none %}
+          <span><i class="fa-regular fa-hard-drive"></i> {% set d = user_disk.get(u_name) %}{% if d < 1024 %}{{ d }}B{% elif d < 1048576 %}{{ (d/1024)|round(1) }}K{% elif d < 1073741824 %}{{ (d/1048576)|round(1) }}M{% else %}{{ (d/1073741824)|round(1) }}G{% endif %}</span>
+          {% endif %}
           {% if info %}
             {% if info.expired %}
               <span style="color:var(--danger);"><i class="fa-regular fa-circle-exclamation"></i> Expired</span>
@@ -286,10 +298,9 @@
             <input type="text" name="new_pw" value="{{ u_pw }}" />
             <button type="submit" class="btn btn-primary btn-sm"><i class="fa-solid fa-save"></i></button>
           </form>
-          <form action="/admin/add_user" method="post" style="display:flex;gap:4px;">
+          <form action="/admin/extend_user" method="post" style="display:flex;gap:4px;">
             <input type="hidden" name="username" value="{{ u_name }}" />
-            <input type="hidden" name="password" value="{{ u_pw }}" />
-            <input type="number" name="days" placeholder="Extend" value="30" min="1" style="width:60px;padding:6px 8px;border-radius:8px;border:1px solid var(--border);background:rgba(0,0,0,0.3);color:var(--text);font-size:12px;" />
+            <input type="number" name="days" placeholder="Days" value="7" min="1" style="width:60px;padding:6px 8px;border-radius:8px;border:1px solid var(--border);background:rgba(0,0,0,0.3);color:var(--text);font-size:12px;" />
             <button type="submit" class="btn btn-primary btn-sm"><i class="fa-solid fa-plus"></i></button>
           </form>
           <a href="/admin/login_as/{{ u_name }}" class="btn btn-primary btn-sm"><i class="fa-solid fa-sign-in-alt"></i> Login</a>
@@ -307,5 +318,17 @@
     &middot; Website-Nexus PRO
   </div>
 </div>
+
+<script>
+document.querySelectorAll('.fmt-date').forEach(function(el) {
+  var ts = parseInt(el.getAttribute('data-ts'));
+  if (ts) {
+    var d = new Date(ts);
+    var months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+    el.textContent = d.getDate() + ' ' + months[d.getMonth()] + ' ' + d.getFullYear() + ' ' +
+      ('0' + d.getHours()).slice(-2) + ':' + ('0' + d.getMinutes()).slice(-2);
+  }
+});
+</script>
 </body>
 </html>

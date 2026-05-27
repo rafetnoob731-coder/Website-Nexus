@@ -23,12 +23,18 @@
       --muted: #64748b;
     }
 
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.08); border-radius: 3px; }
+    ::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.15); }
+
     body {
       font-family: 'Inter', -apple-system, sans-serif;
       background: var(--bg);
       color: var(--text);
       min-height: 100vh;
       padding: 16px;
+      overflow-y: auto;
     }
 
     body::before {
@@ -232,6 +238,26 @@
     </div>
   </div>
 
+  <!-- Stats -->
+  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;margin-bottom:20px">
+    <div style="background:var(--card);backdrop-filter:blur(12px);border:1px solid var(--border);border-radius:14px;padding:16px;text-align:center">
+      <div style="font-size:22px;font-weight:800;color:var(--accent)">{{ user_count|default(0) }}</div>
+      <div style="font-size:11px;color:var(--muted);margin-top:4px">Projects</div>
+    </div>
+    <div style="background:var(--card);backdrop-filter:blur(12px);border:1px solid var(--border);border-radius:14px;padding:16px;text-align:center">
+      <div style="font-size:22px;font-weight:800;color:var(--success)">{{ disk_usage|default('—') }}</div>
+      <div style="font-size:11px;color:var(--muted);margin-top:4px">Disk Used</div>
+    </div>
+    <div style="background:var(--card);backdrop-filter:blur(12px);border:1px solid var(--border);border-radius:14px;padding:16px;text-align:center">
+      <div style="font-size:22px;font-weight:800;color:var(--warning)">{{ expire|default('—') }}</div>
+      <div style="font-size:11px;color:var(--muted);margin-top:4px">Expiry</div>
+    </div>
+    <div style="background:var(--card);backdrop-filter:blur(12px);border:1px solid var(--border);border-radius:14px;padding:16px;text-align:center">
+      <div style="font-size:22px;font-weight:800;color:var(--accent2)">{{ total_users|default('—') }}</div>
+      <div style="font-size:11px;color:var(--muted);margin-top:4px">Total Users</div>
+    </div>
+  </div>
+
   <!-- Upload -->
   <div class="upload-card">
     <form action="/upload" method="post" enctype="multipart/form-data">
@@ -270,6 +296,8 @@
         <a href="/restart/{{ app.name }}" class="restart"><i class="fa-solid fa-rotate"></i> Restart</a>
         <a href="/files/{{ app.name }}" class="edit"><i class="fa-solid fa-code"></i> Files</a>
         <a href="#" class="edit" onclick="openLog('{{ app.name }}'); return false;"><i class="fa-regular fa-file-lines"></i> Logs</a>
+        <a href="#" class="edit" onclick="openPkg('{{ app.name }}'); return false;"><i class="fa-solid fa-box"></i> Pkg</a>
+        <a href="#" class="edit" onclick="openTerm('{{ app.name }}'); return false;"><i class="fa-solid fa-terminal"></i> Term</a>
         <a href="/download/{{ app.name }}" class="dl"><i class="fa-solid fa-download"></i> ZIP</a>
         <a href="/delete/{{ app.name }}" class="del" onclick="return confirm('Delete this project permanently?')"><i class="fa-solid fa-trash-can"></i> Delete</a>
       </div>
@@ -307,6 +335,39 @@
   </div>
 </div>
 
+<!-- Package Install Modal -->
+<div class="log-modal-overlay" id="pkgModal">
+  <div class="log-modal" style="max-width:500px">
+    <div class="log-modal-header">
+      <h3><i class="fa-solid fa-box" style="color:var(--accent);margin-right:8px;"></i> <span id="pkgTitle">Install Packages</span></h3>
+      <button class="close-btn" onclick="closePkgModal()"><i class="fa-solid fa-xmark"></i></button>
+    </div>
+    <div style="padding:18px 22px">
+      <input type="text" id="pkgInput" placeholder="package name (e.g. requests) or npm:lodash" style="width:100%;padding:10px 14px;border-radius:10px;border:1px solid var(--border);background:rgba(0,0,0,0.3);color:var(--text);font-size:13px;font-family:inherit;outline:none;margin-bottom:12px" />
+      <button class="btn-upload" onclick="installPkg()" style="width:100%"><i class="fa-solid fa-download"></i> Install</button>
+      <pre id="pkgOutput" style="margin-top:12px;padding:12px;border-radius:10px;background:rgba(0,0,0,0.3);font-size:12px;max-height:200px;overflow-y:auto;display:none;white-space:pre-wrap;word-break:break-all"></pre>
+    </div>
+  </div>
+</div>
+
+<!-- Terminal Modal -->
+<div class="log-modal-overlay" id="termModal">
+  <div class="log-modal" style="max-width:800px">
+    <div class="log-modal-header">
+      <h3><i class="fa-solid fa-terminal" style="color:var(--accent);margin-right:8px;"></i> <span id="termTitle">Terminal</span></h3>
+      <button class="close-btn" onclick="closeTermModal()"><i class="fa-solid fa-xmark"></i></button>
+    </div>
+    <div style="padding:18px 22px;display:flex;flex-direction:column">
+      <pre id="termOutput" style="padding:12px;border-radius:10px;background:rgba(0,0,0,0.5);font-size:12px;min-height:200px;max-height:400px;overflow-y:auto;white-space:pre-wrap;word-break:break-all;font-family:'JetBrains Mono',monospace;margin-bottom:12px;color:#e2e8f0"></pre>
+      <div style="display:flex;gap:8px">
+        <input type="text" id="termInput" placeholder="$ enter command..." style="flex:1;padding:10px 14px;border-radius:10px;border:1px solid var(--border);background:rgba(0,0,0,0.3);color:var(--text);font-size:13px;font-family:inherit;outline:none" onkeydown="if(event.key==='Enter')runCmd()" />
+        <button class="btn-upload" onclick="runCmd()"><i class="fa-solid fa-play"></i></button>
+        <button class="btn-upload" onclick="document.getElementById('termOutput').textContent=''" style="background:rgba(244,63,94,.12);color:var(--danger)"><i class="fa-solid fa-eraser"></i></button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <script>
   let logProject = null;
   let logInterval = null;
@@ -326,25 +387,92 @@
     logProject = null;
   }
 
-  function fetchLog() {
-    if (!logProject) return;
-    fetch('/get-log/' + logProject)
-      .then(r => r.json())
-      .then(data => {
-        document.getElementById('logContent').textContent = data.log || 'No log output yet.';
-        const dot = document.getElementById('logStatusDot');
-        const statusText = document.getElementById('logStatusText');
-        if (data.status === 'RUNNING') {
-          dot.className = 'dot green';
-          statusText.textContent = 'RUNNING';
-        } else {
-          dot.className = 'dot red';
-          statusText.textContent = 'STOPPED';
-        }
-      })
-      .catch(() => {
-        document.getElementById('logContent').textContent = 'Failed to fetch log.';
-      });
+  function closeModal(id) {
+    document.getElementById(id).classList.remove('active');
+  }
+
+  // Package install
+  let pkgProject = null;
+  function openPkg(project) {
+    pkgProject = project;
+    document.getElementById('pkgTitle').textContent = project + ' — Install Package';
+    document.getElementById('pkgInput').value = '';
+    document.getElementById('pkgOutput').style.display = 'none';
+    document.getElementById('pkgOutput').textContent = '';
+    document.getElementById('pkgModal').classList.add('active');
+  }
+  function closePkgModal() {
+    document.getElementById('pkgModal').classList.remove('active');
+    pkgProject = null;
+  }
+  function installPkg() {
+    var pkg = document.getElementById('pkgInput').value.trim();
+    if (!pkg || !pkgProject) return;
+    var out = document.getElementById('pkgOutput');
+    out.style.display = 'block';
+    out.textContent = 'Installing ' + pkg + '...';
+    fetch('/api/install-package', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({project: pkgProject, package: pkg})
+    }).then(function(r) { return r.json(); }).then(function(d) {
+      out.textContent = d.output || (d.status === 'success' ? 'Installed successfully.' : 'Error: ' + (d.error || 'Unknown'));
+    }).catch(function(e) {
+      out.textContent = 'Error: ' + e.message;
+    });
+  }
+
+  // Terminal
+  let termProject = null;
+  function openTerm(project) {
+    termProject = project;
+    document.getElementById('termTitle').textContent = project + ' — Terminal';
+    document.getElementById('termOutput').textContent = 'Terminal ready for ' + project + '. Type a command and press Enter.';
+    document.getElementById('termInput').value = '';
+    document.getElementById('termModal').classList.add('active');
+    setTimeout(function() { document.getElementById('termInput').focus(); }, 300);
+  }
+  function closeTermModal() {
+    document.getElementById('termModal').classList.remove('active');
+    termProject = null;
+  }
+  function runCmd() {
+    var cmd = document.getElementById('termInput').value.trim();
+    if (!cmd || !termProject) return;
+    var out = document.getElementById('termOutput');
+    out.textContent += '\n$ ' + cmd + '\n';
+    document.getElementById('termInput').value = '';
+    fetch('/api/terminal', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({project: termProject, command: cmd})
+    }).then(function(r) { return r.json(); }).then(function(d) {
+      out.textContent += (d.output || '(no output)') + '\n';
+      out.scrollTop = out.scrollHeight;
+    }).catch(function(e) {
+      out.textContent += 'Error: ' + e.message + '\n';
+    });
+  }
+
+  // close modals on overlay click
+  document.getElementById('logModal').addEventListener('click', function(e) {
+    if (e.target === this) closeLogModal();
+  });
+  document.getElementById('pkgModal').addEventListener('click', function(e) {
+    if (e.target === this) closePkgModal();
+  });
+  document.getElementById('termModal').addEventListener('click', function(e) {
+    if (e.target === this) closeTermModal();
+  });
+
+  // ESC key
+  document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') {
+      closeLogModal();
+      closePkgModal();
+      closeTermModal();
+    }
+  });
   }
 
   // close on overlay click

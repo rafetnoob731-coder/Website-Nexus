@@ -227,6 +227,9 @@
       </form>
 
       <div class="footer-text">
+        {% if total_users is defined and total_users > 0 %}
+        <div style="font-size:12px;color:var(--text-muted);margin-bottom:8px"><i class="fa-solid fa-users"></i> {{ total_users }} registered user(s)</div>
+        {% endif %}
         <a href="https://t.me/VIP_DARK_GOD" target="_blank">
           <i class="fa-brands fa-telegram"></i> @VIP_DARK_GOD
         </a>

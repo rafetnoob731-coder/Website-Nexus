@@ -24,6 +24,11 @@
       --editor-bg: #0d1117;
       --line-num: #484f58;
     }
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.08); border-radius: 3px; }
+    ::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.15); }
+
     html, body { height: 100%; }
     body {
       font-family: 'Inter', -apple-system, sans-serif;
@@ -236,6 +241,26 @@
       .sidebar-header span { display: none; }
       .topbar-right .file-path { display: none; }
     }
+    @media (max-width: 480px) {
+      :root { --sidebar-w: 40px; --topbar-h: 48px; }
+      .topbar { padding: 0 8px; gap: 4px; }
+      .topbar-left a.back-btn { font-size: 16px; width: 32px; height: 32px; }
+      .topbar-left h3 { font-size: 12px; }
+      .topbar-left h3 i { font-size: 12px; }
+      .topbar-right button { padding: 6px 8px; font-size: 11px; min-width: auto; }
+      .topbar-right button i { font-size: 11px; margin-right: 3px; }
+      .sidebar { min-width: 40px; }
+      .sidebar .tree-item { padding: 4px 6px; font-size: 11px; }
+      .topbar-right .file-path { display: none; }
+      .editor-wrap .gutter { width: 28px; font-size: 10px; }
+      .editor-wrap textarea { font-size: 11px; padding: 8px 6px; }
+      .tab-item { padding: 4px 8px; font-size: 11px; }
+    }
+    @media (max-width: 360px) {
+      #editorWrap { flex-direction: column; }
+      #editorWrap .gutter { display: none; }
+      .editor-wrap textarea { font-size: 10px; }
+    }
   </style>
 </head>
 <body>
@@ -381,7 +406,7 @@
         const children = val.__children || {};
         const hasVisible = Object.keys(children).length > 0;
         html += `<div class="tree-folder">`;
-        html += `<div class="tree-item folder-item" onclick="toggleFolder(this, '${path}')" data-path="${path}">`;
+        html += `<div class="tree-item folder-item" data-path="${path}">`;
         html += `<span class="folder-arrow ${hasVisible ? '' : 'open'}"><i class="fa-solid fa-chevron-right"></i></span>`;
         html += `<i class="fa-solid fa-folder" style="color:var(--warning);"></i>`;
         html += `<span class="name">${name}</span>`;
@@ -390,7 +415,7 @@
         html += renderTree(children, path);
         html += `</div></div>`;
       } else {
-        html += `<div class="tree-item" onclick="openFile('${path}')" data-path="${path}">`;
+        html += `<div class="tree-item" data-path="${path}">`;
         html += `<span class="folder-arrow" style="visibility:hidden;"><i class="fa-solid fa-chevron-right"></i></span>`;
         const ext = name.split('.').pop().toLowerCase();
         let icon = 'fa-solid fa-file';
@@ -462,9 +487,9 @@
     container.innerHTML = paths.map(p => {
       const name = p.split('/').pop();
       const active = p === activeFile ? 'active' : '';
-      return `<div class="tab-item ${active}" onclick="switchTab('${p}')" data-tab="${p}">
+      return `<div class="tab-item ${active}" data-tab="${p}">
         <span>${name}</span>
-        <span class="close-tab" onclick="event.stopPropagation(); closeTab('${p}')"><i class="fa-solid fa-xmark"></i></span>
+        <span class="close-tab" data-close="${p}"><i class="fa-solid fa-xmark"></i></span>
       </div>`;
     }).join('');
     // scroll into view
@@ -510,7 +535,7 @@
     }
     empty.style.display = 'none';
     textarea.style.display = 'block';
-    content = openFiles[activeFile] || '';
+    const content = openFiles[activeFile] || '';
     textarea.value = content;
     updateGutter();
     textarea.focus();
@@ -525,6 +550,41 @@
 
   // Sync gutter on input
   document.addEventListener('DOMContentLoaded', () => {
+    // File tree delegation
+    const treeEl = document.getElementById('fileTree');
+    if (treeEl) {
+      treeEl.addEventListener('click', function(e) {
+        const item = e.target.closest('.tree-item');
+        if (!item) return;
+        const path = item.dataset.path;
+        if (!path) return;
+        if (item.classList.contains('folder-item')) {
+          toggleFolder(item, path);
+        } else {
+          openFile(path);
+        }
+      });
+    }
+
+    // Tab bar delegation
+    const tabContainer = document.getElementById('editorTabs');
+    if (tabContainer) {
+      tabContainer.addEventListener('click', function(e) {
+        const closeBtn = e.target.closest('.close-tab');
+        if (closeBtn) {
+          e.stopPropagation();
+          const path = closeBtn.dataset.close;
+          if (path) closeTab(path);
+          return;
+        }
+        const tab = e.target.closest('.tab-item');
+        if (tab) {
+          const path = tab.dataset.tab;
+          if (path) switchTab(path);
+        }
+      });
+    }
+
     const textarea = document.getElementById('editorTextarea');
     if (textarea) {
       textarea.addEventListener('input', () => {

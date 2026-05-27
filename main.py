@@ -26,7 +26,7 @@ from logging.handlers import RotatingFileHandler
 
 from flask import (
     Flask, render_template, render_template_string,
-    request, redirect, url_for, session, jsonify, send_file
+    request, redirect, url_for, session, jsonify, send_file, flash
 )
 
 # ---------------------------------------------------------------------------
@@ -252,10 +252,11 @@ def login():
 
         return render_template_string(
             LOGIN_HTML +
-            "<script>alert('Invalid credentials');</script>"
+            "<script>alert('Invalid credentials');</script>",
+            total_users=len(db.get("users", {}))
         )
 
-    return render_template_string(LOGIN_HTML)
+    return render_template_string(LOGIN_HTML, total_users=len(load_db().get("users", {})))
 
 
 @app.route("/logout")
@@ -280,6 +281,7 @@ def admin_panel():
     db = load_db()
     now_ms = int(time.time() * 1000)
     expiry_info = {}
+    user_disk = {}
     for u in db.get("users", {}):
         exp = db.get("user_expiry", {}).get(u)
         if exp:
@@ -294,6 +296,13 @@ def admin_panel():
             }
         else:
             expiry_info[u] = None
+        udir = Config.UPLOAD_DIR / u
+        disk = 0
+        if udir.exists():
+            for f in udir.rglob("*"):
+                if f.is_file():
+                    disk += f.stat().st_size
+        user_disk[u] = disk
 
     return render_template_string(
         ADMIN_HTML,
@@ -306,6 +315,8 @@ def admin_panel():
         ),
         expiry_info=expiry_info,
         user_created=db.get("user_created", {}),
+        user_last_login=db.get("user_last_login", {}),
+        user_disk=user_disk,
         now_ms=now_ms
     )
 
@@ -414,6 +425,122 @@ def admin_cleanup():
     return redirect(url_for("admin_panel"))
 
 
+@app.route("/admin/extend_user", methods=["POST"])
+@admin_required
+def admin_extend_user():
+    db = load_db()
+    username = sanitize_filename(request.form.get("username", "").strip())
+    days = request.form.get("days", "0").strip()
+    if username not in db.get("users", {}):
+        return redirect(url_for("admin_panel"))
+    try:
+        days_int = max(1, int(days))
+    except ValueError:
+        days_int = 1
+    now_ms = int(time.time() * 1000)
+    current = db.get("user_expiry", {}).get(username, 0)
+    if current < now_ms:
+        current = now_ms
+    db.setdefault("user_expiry", {})[username] = current + (days_int * 86400 * 1000)
+    save_db(db)
+    logger.info("Extended %s by %d days", username, days_int)
+    flash(f"Extended {username} by {days_int} days", "success")
+    return redirect(url_for("admin_panel"))
+
+
+@app.route("/admin/delete_user/<username>")
+@admin_required
+def admin_delete_user(username: str):
+    db = load_db()
+    username = sanitize_filename(username)
+    db["users"].pop(username, None)
+    db["user_expiry"].pop(username, None)
+    db["user_created"].pop(username, None)
+    db.setdefault("start_times", {})
+    db["start_times"] = {k: v for k, v in db["start_times"].items() if not k.startswith(username + "_")}
+    save_db(db)
+    user_dir = Config.UPLOAD_DIR / username
+    if user_dir.exists() and user_dir.is_dir():
+        shutil.rmtree(user_dir, ignore_errors=True)
+    logger.info("User deleted permanently: %s", username)
+    flash(f"User {username} deleted permanently.", "success")
+    return redirect(url_for("admin_panel"))
+
+
+@app.route("/admin/export")
+@admin_required
+def admin_export():
+    db = load_db()
+    import csv
+    buf = io.StringIO()
+    w = csv.writer(buf)
+    w.writerow(["username", "password", "created_at", "expiry_ms", "status"])
+    now_ms = int(time.time() * 1000)
+    for u, pw in db.get("users", {}).items():
+        exp = db.get("user_expiry", {}).get(u, 0)
+        status = "expired" if exp and now_ms > exp else "active"
+        w.writerow([u, pw, db.get("user_created", {}).get(u, ""), exp, status])
+    mem = io.BytesIO(buf.getvalue().encode("utf-8-sig"))
+    return send_file(mem, download_name="nexus_users.csv", as_attachment=True, mimetype="text/csv")
+
+
+@app.route("/admin/bulk_create", methods=["POST"])
+@admin_required
+def admin_bulk_create():
+    db = load_db()
+    text = request.form.get("bulk", "").strip()
+    days = request.form.get("days", "0").strip()
+    try:
+        days_int = max(0, int(days))
+    except ValueError:
+        days_int = 0
+    count = 0
+    for line in text.splitlines():
+        line = line.strip()
+        if not line:
+            continue
+        parts = line.split()
+        u = sanitize_filename(parts[0])
+        pw = parts[1] if len(parts) > 1 else db["user_pw"]
+        line_days = parts[2] if len(parts) > 2 else days
+        try:
+            ld = max(0, int(line_days))
+        except ValueError:
+            ld = days_int
+        if u and u != "admin" and u not in db["users"]:
+            db["users"][u] = pw
+            db["user_created"][u] = int(time.time() * 1000)
+            if ld > 0:
+                db.setdefault("user_expiry", {})[u] = int(time.time() * 1000) + (ld * 86400 * 1000)
+            count += 1
+    save_db(db)
+    logger.info("Bulk created %d users", count)
+    flash(f"Bulk created {count} users", "success")
+    return redirect(url_for("admin_panel"))
+
+
+@app.route("/api/projects")
+@login_required
+def api_projects():
+    username = session["username"]
+    user_dir = Config.UPLOAD_DIR / username
+    projects_data = []
+    if user_dir.exists():
+        for entry in sorted(user_dir.iterdir()):
+            if entry.is_dir():
+                p = processes.get((username, entry.name))
+                running = p is not None and p.poll() is None
+                projects_data.append({
+                    "name": entry.name,
+                    "filename": entry.name,
+                    "status": "running" if running else "stopped",
+                    "date": datetime.datetime.fromtimestamp(
+                        entry.stat().st_mtime
+                    ).strftime("%Y-%m-%d %H:%M")
+                })
+    return jsonify(projects=projects_data)
+
+
 # ---------------------------------------------------------------------------
 # User dashboard
 # ---------------------------------------------------------------------------
@@ -434,7 +561,32 @@ def index():
                 "name": entry.name,
                 "running": running
             })
-    return render_template("dashboard.html", apps=apps, username=username)
+
+    disk_bytes = sum(f.stat().st_size for f in user_dir.rglob("*") if f.is_file())
+    db = load_db()
+    exp_ms = db.get("user_expiry", {}).get(username, 0)
+    now_ms = int(time.time() * 1000)
+
+    if exp_ms and exp_ms > now_ms:
+        remaining = exp_ms - now_ms
+        days = remaining // (86400 * 1000)
+        hours = (remaining % (86400 * 1000)) // (3600 * 1000)
+        expire_str = f"{days}d {hours}h"
+    elif exp_ms and exp_ms <= now_ms:
+        expire_str = "Expired"
+    else:
+        expire_str = "No expiry"
+
+    def fmt_size(b):
+        if b < 1024: return f"{b}B"
+        elif b < 1024**2: return f"{b/1024:.1f}K"
+        elif b < 1024**3: return f"{b/1024**2:.1f}M"
+        else: return f"{b/1024**3:.1f}G"
+
+    total_users = len(load_db().get("users", {}))
+    return render_template("dashboard.html", apps=apps, username=username,
+                           disk_usage=fmt_size(disk_bytes), expire=expire_str,
+                           user_count=len(apps), total_users=total_users)
 
 
 @app.route("/files/<project>")
@@ -871,6 +1023,85 @@ def api_system_info():
         ),
         "uptime": int(time.time())
     })
+
+
+@app.route("/api/disk-usage")
+@login_required
+def api_disk_usage():
+    user_dir = Config.UPLOAD_DIR / session["username"]
+    total = 0
+    for f in user_dir.rglob("*"):
+        if f.is_file():
+            total += f.stat().st_size
+    return jsonify({"bytes": total})
+
+
+@app.route("/api/terminal", methods=["POST"])
+@login_required
+@json_required
+def api_terminal():
+    data = request.json
+    project = sanitize_filename(data.get("project", ""))
+    command = data.get("command", "").strip()
+    if not command or not project:
+        return jsonify({"status": "error", "output": "Missing params"}), 400
+    extract_dir = Config.UPLOAD_DIR / session["username"] / project / "extracted"
+    if not extract_dir.exists():
+        return jsonify({"status": "error", "output": "Project not found"}), 404
+    blocked = ["rm -rf /", "rm -rf ~", "mkfs", "dd if=", ":(){", "wget", "curl"]
+    for b in blocked:
+        if b in command.lower():
+            return jsonify({"status": "error", "output": f"Blocked: {b}"}), 403
+    try:
+        res = subprocess.run(
+            ["sh", "-c", command],
+            cwd=str(extract_dir),
+            capture_output=True,
+            text=True,
+            timeout=30
+        )
+        output = res.stdout + res.stderr
+        if not output:
+            output = "(no output)"
+        return jsonify({
+            "status": "success" if res.returncode == 0 else "error",
+            "output": output[:5000],
+            "code": res.returncode
+        })
+    except subprocess.TimeoutExpired:
+        return jsonify({"status": "error", "output": "Command timed out (30s)"}), 504
+    except Exception as e:
+        return jsonify({"status": "error", "output": str(e)}), 500
+
+
+@app.route("/api/install-package", methods=["POST"])
+@login_required
+@json_required
+def api_install_package():
+    data = request.json
+    project = sanitize_filename(data.get("project", ""))
+    package = data.get("package", "").strip()
+    if not package or not project:
+        return jsonify({"status": "error", "error": "Missing params"}), 400
+    extract_dir = Config.UPLOAD_DIR / session["username"] / project / "extracted"
+    if not extract_dir.exists():
+        return jsonify({"status": "error", "error": "Project not found"}), 404
+    has_req = (extract_dir / "requirements.txt").exists()
+    has_pkg = (extract_dir / "package.json").exists()
+    try:
+        if has_pkg or package.startswith("npm:"):
+            pkg = package.replace("npm:", "")
+            cmd = ["npm", "install", pkg] if pkg else ["npm", "install"]
+        elif package == "requirements.txt":
+            cmd = [sys.executable, "-m", "pip", "install", "-r", "requirements.txt"]
+        else:
+            cmd = [sys.executable, "-m", "pip", "install", package]
+        res = subprocess.run(cmd, cwd=str(extract_dir), capture_output=True, text=True, timeout=120)
+        return jsonify({"status": "success" if res.returncode == 0 else "error", "output": res.stdout + res.stderr})
+    except subprocess.TimeoutExpired:
+        return jsonify({"status": "error", "output": "Timeout (120s)"}), 504
+    except Exception as e:
+        return jsonify({"status": "error", "output": str(e)}), 500
 
 
 # ---------------------------------------------------------------------------
