@@ -4,277 +4,168 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Admin — NEXUS | VIP DARK GOD</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+  <link rel="stylesheet" href="/static/nexus.css" />
   <style>
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
-    :root {
-      --bg: #080a0f;
-      --card-bg: rgba(14, 17, 26, 0.85);
-      --border: rgba(255,255,255,0.06);
-      --accent: #00f0ff;
-      --accent2: #7c3aed;
-      --success: #10b981;
-      --warning: #f59e0b;
-      --danger: #f43f5e;
-      --text: #e2e8f0;
-      --muted: #64748b;
-    }
-
-    ::-webkit-scrollbar { width: 6px; }
-    ::-webkit-scrollbar-track { background: transparent; }
-    ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.08); border-radius: 3px; }
-    ::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.15); }
-
-    body {
-      font-family: 'Inter', -apple-system, sans-serif;
-      background: var(--bg);
-      color: var(--text);
-      min-height: 100vh;
-      padding: 20px;
-      overflow-y: auto;
-    }
-
-    body::before {
-      content: '';
-      position: fixed; inset: 0; z-index: -1;
-      background:
-        radial-gradient(ellipse at 20% 80%, rgba(124,58,237,.10) 0%, transparent 60%),
-        radial-gradient(ellipse at 80% 20%, rgba(0,240,255,.07) 0%, transparent 50%);
-    }
-
-    .container { max-width: 1100px; margin: 0 auto; }
-
-    .header {
-      display: flex; align-items: center; justify-content: space-between;
-      padding: 16px 24px;
-      background: var(--card-bg);
-      backdrop-filter: blur(16px);
+    .admin-card {
+      background: rgba(17,24,39,0.6);
       border: 1px solid var(--border);
-      border-radius: 16px;
-      margin-bottom: 24px;
-    }
-    .header-left { display: flex; align-items: center; gap: 14px; }
-    .header-left .icon {
-      width: 44px; height: 44px;
-      background: linear-gradient(135deg, var(--accent), var(--accent2));
-      border-radius: 12px;
-      display: flex; align-items: center; justify-content: center;
-      font-size: 20px; color: #fff;
-    }
-    .header-left h2 { font-size: 18px; font-weight: 700; }
-    .header-left small { display: block; font-size: 11px; color: var(--muted); font-weight: 400; }
-    .header-actions { display: flex; gap: 8px; }
-    .btn-icon {
-      width: 38px; height: 38px; border-radius: 10px;
-      border: 1px solid var(--border); background: rgba(255,255,255,0.03);
-      color: var(--text); cursor: pointer; display: flex; align-items: center; justify-content: center;
-      font-size: 15px; transition: 0.2s; text-decoration: none;
-    }
-    .btn-icon:hover { background: rgba(255,255,255,0.08); border-color: rgba(255,255,255,0.12); }
-    .btn-icon.danger:hover { color: var(--danger); border-color: var(--danger); }
-
-    .stats {
-      display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-      gap: 12px; margin-bottom: 24px;
-    }
-    .stat-card {
-      background: var(--card-bg);
-      backdrop-filter: blur(12px);
-      border: 1px solid var(--border);
-      border-radius: 14px;
-      padding: 20px 16px;
-      text-align: center;
-      transition: 0.2s;
-    }
-    .stat-card:hover { border-color: rgba(255,255,255,0.10); }
-    .stat-card i { font-size: 24px; color: var(--accent); margin-bottom: 8px; }
-    .stat-card .value { font-size: 26px; font-weight: 800; }
-    .stat-card .label { font-size: 12px; color: var(--muted); margin-top: 4px; }
-
-    .card {
-      background: var(--card-bg);
-      backdrop-filter: blur(12px);
-      border: 1px solid var(--border);
-      border-radius: 16px;
+      border-radius: var(--radius-lg);
       padding: 24px;
       margin-bottom: 20px;
     }
-    .card-title {
+    .admin-card-title {
       display: flex; align-items: center; gap: 10px;
       font-size: 15px; font-weight: 700; margin-bottom: 18px;
       color: var(--accent);
     }
-    .card-title i { font-size: 18px; }
-
+    .admin-card-title i { font-size: 18px; }
     .form-row {
       display: flex; gap: 10px; flex-wrap: wrap; align-items: center;
     }
-    .form-row input, .form-row select {
-      padding: 10px 14px; border-radius: 10px; border: 1px solid var(--border);
-      background: rgba(0,0,0,0.3); color: var(--text); font-size: 14px; font-family: inherit;
-      outline: none; transition: 0.2s;
-    }
-    .form-row input:focus, .form-row select:focus {
-      border-color: var(--accent); box-shadow: 0 0 0 3px rgba(0,240,255,.10);
-    }
-    .form-row input.small { width: 80px; min-width: auto; flex: none; }
-    .form-row input.med { width: 140px; min-width: auto; flex: none; }
-
-    .btn {
-      padding: 10px 18px; border-radius: 10px; border: none;
-      font-weight: 600; font-size: 13px; font-family: inherit;
-      cursor: pointer; transition: 0.2s;
-      display: inline-flex; align-items: center; gap: 6px; text-decoration: none;
-    }
-    .btn-primary { background: linear-gradient(135deg, var(--accent), var(--accent2)); color: #fff; }
-    .btn-primary:hover { box-shadow: 0 4px 20px rgba(0,240,255,.25); transform: translateY(-1px); }
-    .btn-success { background: var(--success); color: #fff; }
-    .btn-success:hover { box-shadow: 0 4px 20px rgba(16,185,129,.25); transform: translateY(-1px); }
-
+    .form-row input.med { width: 160px; }
+    .form-row input.small { width: 80px; }
     .user-item {
       background: rgba(255,255,255,0.02);
       border: 1px solid var(--border);
-      border-radius: 12px;
+      border-radius: var(--radius-md);
       padding: 16px;
       margin-bottom: 10px;
-      transition: 0.15s;
+      transition: var(--transition);
     }
     .user-item:hover { border-color: rgba(255,255,255,0.10); }
     .user-item.expired { border-left: 3px solid var(--danger); }
     .user-item.active { border-left: 3px solid var(--success); }
-    .user-item:last-child { margin-bottom: 0; }
-    .user-head { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px; }
-    .user-name { font-weight: 700; color: var(--accent); font-size: 15px; display: flex; align-items: center; gap: 8px; }
-    .user-name i { margin-right: 2px; }
-    .user-expiry-badge {
-      font-size: 10px; font-weight: 600; padding: 3px 10px; border-radius: 20px;
-      letter-spacing: 0.3px;
-    }
-    .badge-expired { background: rgba(244,63,94,.15); color: var(--danger); }
-    .badge-active { background: rgba(16,185,129,.15); color: var(--success); }
-    .badge-lifetime { background: rgba(148,163,184,.10); color: var(--muted); }
-    .badge-warning { background: rgba(245,158,11,.15); color: var(--warning); }
-
-    .user-tags { display: flex; flex-wrap: wrap; gap: 6px; margin: 10px 0; }
+    .user-name { font-weight: 700; font-size: 15px; display: flex; align-items: center; gap: 8px; }
+    .user-meta { display: flex; gap: 12px; flex-wrap: wrap; margin: 8px 0 10px; font-size: 11px; color: var(--text-secondary); }
+    .user-meta span { display: flex; align-items: center; gap: 4px; }
+    .user-tags { display: flex; flex-wrap: wrap; gap: 6px; margin: 8px 0; }
     .tag {
-      background: rgba(0,240,255,0.07);
+      background: rgba(0,212,255,0.07);
       color: var(--accent);
       padding: 4px 10px;
       border-radius: 6px;
       font-size: 11px;
-      border: 1px solid rgba(0,240,255,0.12);
+      border: 1px solid rgba(0,212,255,0.12);
     }
-    .user-meta {
-      display: flex; gap: 12px; flex-wrap: wrap; margin: 6px 0 10px;
-      font-size: 11px; color: var(--muted);
+    .badge-expired { background: rgba(239,68,68,0.15); color: var(--danger); }
+    .badge-active { background: rgba(16,185,129,0.15); color: var(--success); }
+    .badge-lifetime { background: rgba(156,163,175,0.10); color: var(--text-muted); }
+    .badge-warning { background: rgba(245,158,11,0.15); color: var(--warning); }
+    .user-expiry-badge {
+      font-size: 10px; font-weight: 600; padding: 3px 10px; border-radius: 20px;
+      letter-spacing: 0.3px;
     }
-    .user-meta span { display: flex; align-items: center; gap: 4px; }
     .user-actions { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
     .user-actions form { display: flex; gap: 6px; align-items: center; }
     .user-actions input[type="text"], .user-actions input[type="number"] {
-      padding: 6px 10px; border-radius: 8px; border: 1px solid var(--border);
+      padding: 6px 10px; border-radius: var(--radius-sm); border: 1px solid var(--border);
       background: rgba(0,0,0,0.3); color: var(--text); font-size: 12px; width: 90px;
     }
-    .user-actions input[type="number"] { width: 70px; }
-    .btn-sm { padding: 6px 12px; font-size: 12px; border-radius: 8px; }
-
-    .empty { color: var(--muted); font-size: 13px; text-align: center; padding: 30px 0; }
-
-    .footer-credit {
-      text-align: center; margin-top: 40px; padding: 20px;
-      font-size: 12px; color: var(--muted); border-top: 1px solid var(--border);
-    }
-    .footer-credit strong { color: var(--accent); }
-
+    .user-actions input[type="number"] { width: 60px; }
     @media (max-width: 600px) {
-      body { padding: 12px; }
       .header { flex-direction: column; gap: 12px; align-items: stretch; }
-      .card { padding: 16px; }
-      .user-head { flex-direction: column; align-items: stretch; }
-      .user-meta { flex-direction: column; gap: 4px; }
+      .admin-card { padding: 16px; }
       .form-row input.med { width: 100%; }
     }
   </style>
 </head>
 <body>
-<div class="container">
-  <div class="header">
-    <div class="header-left">
-      <div class="icon"><i class="fa-solid fa-shield-halved"></i></div>
-      <div>
-        <h2>Admin Root</h2>
-        <small>VIP DARK GOD — Nexus Control</small>
-      </div>
+
+<div class="header">
+  <div class="header-brand">
+    <div class="logo"><i class="fa-solid fa-shield-halved"></i></div>
+    <div>
+      <span>Admin Root</span>
+      <div style="font-size:10px;color:var(--text-muted);font-weight:400">VIP DARK GOD — Nexus Control</div>
     </div>
-    <div class="header-actions">
-      <a href="/admin/cleanup" class="btn-icon" title="Cleanup orphans"><i class="fa-solid fa-broom"></i></a>
-      <a href="/" class="btn-icon" title="Dashboard"><i class="fa-solid fa-gauge"></i></a>
-      <a href="/logout" class="btn-icon danger" title="Logout"><i class="fa-solid fa-power-off"></i></a>
+  </div>
+  <div class="header-actions">
+    <a href="/admin/cleanup" class="btn-icon" title="Cleanup orphans"><i class="fa-solid fa-broom"></i></a>
+    <a href="/" class="btn-icon" title="Dashboard"><i class="fa-solid fa-gauge"></i></a>
+    <a href="/logout" class="btn-icon" title="Logout" style="color:var(--danger)"><i class="fa-solid fa-power-off"></i></a>
+  </div>
+</div>
+
+<div class="main">
+<div class="main-content" style="padding-top:88px">
+
+  <!-- Stats -->
+  <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-bottom:32px">
+    <div class="stat-card">
+      <div class="icon"><i class="fa-solid fa-users"></i></div>
+      <div class="value">{{ users|length }}</div>
+      <div class="label">Total Users</div>
+    </div>
+    <div class="stat-card">
+      <div class="icon" style="color:var(--success)"><i class="fa-solid fa-rocket"></i></div>
+      <div class="value" style="color:var(--success)">{{ start_times|length }}</div>
+      <div class="label">Active Sessions</div>
+    </div>
+    <div class="stat-card">
+      <div class="icon" style="color:var(--accent-purple)"><i class="fa-solid fa-microchip"></i></div>
+      <div class="value" style="color:var(--accent-purple)">{{ total_bots }}</div>
+      <div class="label">Running Bots</div>
     </div>
   </div>
 
-  <div class="stats">
-    <div class="stat-card"><i class="fa-solid fa-users"></i><div class="value">{{ users|length }}</div><div class="label">Total Users</div></div>
-    <div class="stat-card"><i class="fa-solid fa-rocket"></i><div class="value">{{ start_times|length }}</div><div class="label">Active Sessions</div></div>
-    <div class="stat-card"><i class="fa-solid fa-microchip"></i><div class="value">{{ total_bots }}</div><div class="label">Running Bots</div></div>
-  </div>
-
-  <div class="card">
-    <div class="card-title"><i class="fa-solid fa-key"></i> Default Password</div>
+  <!-- Default Password -->
+  <div class="admin-card">
+    <div class="admin-card-title"><i class="fa-solid fa-key"></i> Default Password</div>
     <form action="/admin/global_pw" method="post" class="form-row">
-      <input type="text" name="global_pw" value="{{ global_pw }}" />
+      <input type="text" name="global_pw" class="input" style="flex:1;min-width:200px" value="{{ global_pw }}" />
       <button type="submit" class="btn btn-primary"><i class="fa-solid fa-check"></i> Update</button>
     </form>
   </div>
 
-  <div class="card">
-    <div class="card-title"><i class="fa-solid fa-user-plus"></i> Create New User</div>
+  <!-- Create User -->
+  <div class="admin-card">
+    <div class="admin-card-title"><i class="fa-solid fa-user-plus"></i> Create New User</div>
     <form action="/admin/add_user" method="post" class="form-row">
-      <input class="med" type="text" name="username" placeholder="Username" required />
-      <input class="med" type="text" name="password" placeholder="Password" required />
-      <input class="small" type="number" name="days" placeholder="Days" value="0" min="0" />
-      <span style="font-size:12px;color:var(--muted);">(0 = unlimited)</span>
-      <button type="submit" class="btn btn-success"><i class="fa-solid fa-plus"></i> Create</button>
+      <input class="input" style="width:160px" type="text" name="username" placeholder="Username" required />
+      <input class="input" style="width:160px" type="text" name="password" placeholder="Password" required />
+      <input class="input" style="width:80px" type="number" name="days" placeholder="Days" value="0" min="0" />
+      <span style="font-size:12px;color:var(--text-muted)">(0 = unlimited)</span>
+      <button type="submit" class="btn btn-primary" style="background:var(--gradient-success);box-shadow:none"><i class="fa-solid fa-plus"></i> Create</button>
     </form>
   </div>
 
-  <div class="card">
-    <div class="card-title"><i class="fa-solid fa-user-gear"></i> User Management <span style="font-size:12px;font-weight:400;color:var(--muted);margin-left:auto;">{{ users|length }} user(s)</span></div>
+  <!-- User Management -->
+  <div class="admin-card">
+    <div class="admin-card-title" style="justify-content:space-between">
+      <span><i class="fa-solid fa-user-gear"></i> User Management</span>
+      <span style="font-size:12px;font-weight:400;color:var(--text-muted)">{{ users|length }} user(s)</span>
+    </div>
     {% if users %}
       {% for u_name, u_pw in users.items() %}
       {% set info = expiry_info.get(u_name) %}
       <div class="user-item {{ 'expired' if info and info.expired else 'active' }}">
-        <div class="user-head">
-          <div class="user-name">
-            <i class="fa-solid fa-circle-user"></i>{{ u_name }}
-            {% if info %}
-              {% if info.expired %}
-                <span class="user-expiry-badge badge-expired"><i class="fa-regular fa-clock"></i> Expired</span>
-              {% elif info.remaining_days <= 3 %}
-                <span class="user-expiry-badge badge-warning"><i class="fa-regular fa-clock"></i> {{ info.remaining_days }}d left</span>
-              {% else %}
-                <span class="user-expiry-badge badge-active"><i class="fa-regular fa-clock"></i> {{ info.remaining_days }}d left</span>
-              {% endif %}
+        <div class="user-name" style="color:var(--accent)">
+          <i class="fa-solid fa-circle-user" style="color:var(--accent)"></i>{{ u_name }}
+          {% if info %}
+            {% if info.expired %}
+              <span class="user-expiry-badge badge-expired"><i class="fa-regular fa-clock"></i> Expired</span>
+            {% elif info.remaining_days <= 3 %}
+              <span class="user-expiry-badge badge-warning"><i class="fa-regular fa-clock"></i> {{ info.remaining_days }}d left</span>
             {% else %}
-              <span class="user-expiry-badge badge-lifetime"><i class="fa-regular fa-infinity"></i> Unlimited</span>
+              <span class="user-expiry-badge badge-active"><i class="fa-regular fa-clock"></i> {{ info.remaining_days }}d left</span>
             {% endif %}
-          </div>
-          <div class="user-tags">
-            {% set ns = namespace(count=0) %}
-            {% for p_key in start_times.keys() %}
-              {% if p_key.startswith(u_name ~ '_') %}
-                {% set p_name = p_key.split('_', 1)[1] %}
-                <span class="tag">&#9679; {{ p_name }}</span>
-                {% set ns.count = ns.count + 1 %}
-              {% endif %}
-            {% endfor %}
-            {% if ns.count == 0 %}
-              <span style="color:var(--muted);font-size:11px;">No active bots</span>
+          {% else %}
+            <span class="user-expiry-badge badge-lifetime"><i class="fa-regular fa-infinity"></i> Unlimited</span>
+          {% endif %}
+        </div>
+        <div class="user-tags">
+          {% set ns = namespace(count=0) %}
+          {% for p_key in start_times.keys() %}
+            {% if p_key.startswith(u_name ~ '_') %}
+              {% set p_name = p_key.split('_', 1)[1] %}
+              <span class="tag">&#9679; {{ p_name }}</span>
+              {% set ns.count = ns.count + 1 %}
             {% endif %}
-          </div>
+          {% endfor %}
+          {% if ns.count == 0 %}
+            <span style="color:var(--text-muted);font-size:11px;">No active bots</span>
+          {% endif %}
         </div>
         <div class="user-meta">
           <span><i class="fa-regular fa-calendar"></i> Created: {% if user_created.get(u_name) %}<span class="fmt-date" data-ts="{{ user_created.get(u_name) }}">{{ user_created.get(u_name) }}</span>{% else %}N/A{% endif %}</span>
@@ -286,7 +177,7 @@
           {% endif %}
           {% if info %}
             {% if info.expired %}
-              <span style="color:var(--danger);"><i class="fa-regular fa-circle-exclamation"></i> Expired</span>
+              <span style="color:var(--danger)"><i class="fa-regular fa-circle-exclamation"></i> Expired</span>
             {% else %}
               <span><i class="fa-regular fa-hourglass-half"></i> {{ info.remaining_hours }}h remaining</span>
             {% endif %}
@@ -295,28 +186,32 @@
         <div class="user-actions">
           <form action="/admin/change_pw" method="post">
             <input type="hidden" name="username" value="{{ u_name }}" />
-            <input type="text" name="new_pw" value="{{ u_pw }}" />
-            <button type="submit" class="btn btn-primary btn-sm"><i class="fa-solid fa-save"></i></button>
+            <input type="text" name="new_pw" value="{{ u_pw }}" style="width:80px" />
+            <button type="submit" class="btn btn-sm btn-primary" style="box-shadow:none"><i class="fa-solid fa-save"></i></button>
           </form>
           <form action="/admin/extend_user" method="post" style="display:flex;gap:4px;">
             <input type="hidden" name="username" value="{{ u_name }}" />
-            <input type="number" name="days" placeholder="Days" value="7" min="1" style="width:60px;padding:6px 8px;border-radius:8px;border:1px solid var(--border);background:rgba(0,0,0,0.3);color:var(--text);font-size:12px;" />
-            <button type="submit" class="btn btn-primary btn-sm"><i class="fa-solid fa-plus"></i></button>
+            <input type="number" name="days" placeholder="Days" value="7" min="1" style="width:60px;padding:6px 8px;border-radius:var(--radius-sm);border:1px solid var(--border);background:rgba(0,0,0,0.3);color:var(--text);font-size:12px;" />
+            <button type="submit" class="btn btn-sm btn-primary" style="box-shadow:none"><i class="fa-solid fa-plus"></i></button>
           </form>
-          <a href="/admin/login_as/{{ u_name }}" class="btn btn-primary btn-sm"><i class="fa-solid fa-sign-in-alt"></i> Login</a>
-          <a href="/admin/ban/{{ u_name }}" class="btn btn-primary btn-sm" style="background:var(--danger);" onclick="return confirm('Ban {{ u_name }} & remove all bots?')"><i class="fa-solid fa-ban"></i> Ban</a>
+          <a href="/admin/login_as/{{ u_name }}" class="btn btn-sm btn-primary" style="background:var(--gradient);box-shadow:none"><i class="fa-solid fa-sign-in-alt"></i> Masq</a>
+          <a href="/admin/ban/{{ u_name }}" class="btn btn-sm btn-ghost" style="background:rgba(236,72,153,0.15);color:var(--accent-magenta);border-color:rgba(236,72,153,0.2)" onclick="return confirm('Ban {{ u_name }} & remove all bots?')"><i class="fa-solid fa-ban"></i> Ban</a>
         </div>
       </div>
       {% endfor %}
     {% else %}
-      <div class="empty"><i class="fa-solid fa-inbox"></i> No users registered yet.</div>
+      <div style="text-align:center;padding:40px 0;color:var(--text-muted);font-size:13px">
+        <i class="fa-solid fa-inbox" style="font-size:24px;margin-bottom:8px;opacity:0.5"></i><br />No users registered yet.
+      </div>
     {% endif %}
   </div>
 
-  <div class="footer-credit">
-    <strong>VIP DARK GOD</strong> &middot; <a href="https://t.me/VIP_DARK_GOD" target="_blank" style="color:var(--accent);text-decoration:none;">@VIP_DARK_GOD</a>
-    &middot; Website-Nexus PRO
+  <div style="text-align:center;margin-top:48px;padding:20px;font-size:11px;color:var(--text-muted);border-top:1px solid var(--border)">
+    <strong style="color:var(--accent)">VIP DARK GOD</strong> &middot;
+    <a href="https://t.me/VIP_DARK_GOD" target="_blank" style="color:var(--accent)">@VIP_DARK_GOD</a>
+    &middot; Nexus Panel PRO
   </div>
+</div>
 </div>
 
 <script>

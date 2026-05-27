@@ -4,329 +4,132 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Dashboard — NEXUS | VIP DARK GOD</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
-  <style>
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
-    :root {
-      --bg: #080a0f;
-      --card: rgba(14, 17, 26, 0.85);
-      --border: rgba(255,255,255,0.06);
-      --accent: #00f0ff;
-      --accent2: #7c3aed;
-      --success: #10b981;
-      --danger: #f43f5e;
-      --warning: #f59e0b;
-      --text: #e2e8f0;
-      --muted: #64748b;
-    }
-
-    ::-webkit-scrollbar { width: 6px; }
-    ::-webkit-scrollbar-track { background: transparent; }
-    ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.08); border-radius: 3px; }
-    ::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.15); }
-
-    body {
-      font-family: 'Inter', -apple-system, sans-serif;
-      background: var(--bg);
-      color: var(--text);
-      min-height: 100vh;
-      padding: 16px;
-      overflow-y: auto;
-    }
-
-    body::before {
-      content: '';
-      position: fixed; inset: 0; z-index: -1;
-      background:
-        radial-gradient(ellipse at 70% 20%, rgba(0,240,255,.06) 0%, transparent 60%),
-        radial-gradient(ellipse at 20% 80%, rgba(124,58,237,.08) 0%, transparent 50%);
-    }
-
-    .container { max-width: 1100px; margin: 0 auto; }
-
-    /* ---- Nav ---- */
-    .nav {
-      display: flex; align-items: center; justify-content: space-between;
-      padding: 14px 20px;
-      background: var(--card); backdrop-filter: blur(16px);
-      border: 1px solid var(--border); border-radius: 16px;
-      margin-bottom: 20px;
-    }
-    .nav-brand { display: flex; align-items: center; gap: 10px; }
-    .nav-brand .logo {
-      width: 36px; height: 36px;
-      background: linear-gradient(135deg, var(--accent), var(--accent2));
-      border-radius: 10px;
-      display: flex; align-items: center; justify-content: center;
-      font-size: 16px; color: #fff;
-    }
-    .nav-brand span { font-weight: 700; font-size: 15px; }
-    .nav-brand small { font-weight: 400; color: var(--muted); font-size: 11px; display: block; }
-    .nav-user { display: flex; align-items: center; gap: 14px; }
-    .nav-user .uname {
-      font-size: 13px; font-weight: 600;
-      background: rgba(255,255,255,0.04); padding: 6px 14px; border-radius: 8px;
-    }
-    .nav-user a { color: var(--muted); text-decoration: none; font-size: 18px; transition: 0.2s; }
-    .nav-user a:hover { color: var(--danger); }
-
-    /* ---- Upload card ---- */
-    .upload-card {
-      background: var(--card); backdrop-filter: blur(16px);
-      border: 1px dashed rgba(0,240,255,0.2);
-      border-radius: 16px; padding: 24px;
-      margin-bottom: 24px; text-align: center;
-      transition: border-color 0.3s;
-    }
-    .upload-card:hover { border-color: var(--accent); }
-    .upload-card form { display: flex; flex-direction: column; align-items: center; gap: 12px; }
-    .upload-card .file-label {
-      display: inline-flex; align-items: center; gap: 8px;
-      padding: 10px 20px; border-radius: 10px;
-      background: rgba(0,240,255,0.06); border: 1px solid rgba(0,240,255,0.15);
-      cursor: pointer; font-size: 13px; font-weight: 600; transition: 0.2s;
-    }
-    .upload-card .file-label:hover { background: rgba(0,240,255,0.12); }
-    .upload-card input[type="file"] { display: none; }
-    .upload-card .btn-upload {
-      padding: 10px 28px; border: none; border-radius: 10px;
-      background: linear-gradient(135deg, var(--accent), var(--accent2));
-      color: #fff; font-weight: 700; font-size: 14px; font-family: inherit;
-      cursor: pointer; transition: 0.3s;
-    }
-    .upload-card .btn-upload:hover { box-shadow: 0 4px 24px rgba(0,240,255,.25); }
-    .upload-card .hint { font-size: 12px; color: var(--muted); }
-
-    /* ---- Bots grid ---- */
-    .section-title {
-      font-size: 16px; font-weight: 700; margin-bottom: 14px;
-      display: flex; align-items: center; gap: 8px;
-    }
-
-    .bot-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-      gap: 14px;
-    }
-
-    .bot-card {
-      background: var(--card); backdrop-filter: blur(12px);
-      border: 1px solid var(--border); border-radius: 16px;
-      padding: 18px; position: relative; overflow: hidden;
-      transition: 0.25s;
-    }
-    .bot-card:hover { border-color: rgba(255,255,255,0.10); }
-
-    .bot-card .status-bar {
-      position: absolute; top: 0; left: 0; right: 0; height: 3px;
-      transition: background 0.4s;
-    }
-    .bot-card .status-bar.running { background: var(--success); }
-    .bot-card .status-bar.stopped { background: var(--danger); }
-
-    .bot-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
-    .bot-name { font-weight: 700; font-size: 15px; display: flex; align-items: center; gap: 8px; }
-    .bot-name i { color: var(--accent); font-size: 14px; }
-    .status-badge {
-      font-size: 10px; font-weight: 700; text-transform: uppercase;
-      padding: 4px 10px; border-radius: 6px; letter-spacing: 0.5px;
-    }
-    .status-badge.on { background: rgba(16,185,129,.15); color: var(--success); }
-    .status-badge.off { background: rgba(244,63,94,.12); color: var(--danger); }
-
-    .bot-info { font-size: 12px; color: var(--muted); margin-bottom: 14px; }
-
-    .bot-actions {
-      display: flex; flex-wrap: wrap; gap: 6px;
-    }
-    .bot-actions a {
-      padding: 7px 14px; border-radius: 8px; text-decoration: none;
-      font-size: 12px; font-weight: 600; transition: 0.2s;
-      display: inline-flex; align-items: center; gap: 5px;
-    }
-    .bot-actions .run   { background: rgba(16,185,129,.12); color: var(--success); }
-    .bot-actions .run:hover   { background: rgba(16,185,129,.22); }
-    .bot-actions .stop  { background: rgba(244,63,94,.12); color: var(--danger); }
-    .bot-actions .stop:hover  { background: rgba(244,63,94,.22); }
-    .bot-actions .restart { background: rgba(245,158,11,.12); color: var(--warning); }
-    .bot-actions .restart:hover { background: rgba(245,158,11,.22); }
-    .bot-actions .edit  { background: rgba(0,240,255,.08); color: var(--accent); }
-    .bot-actions .edit:hover  { background: rgba(0,240,255,.16); }
-    .bot-actions .dl    { background: rgba(124,58,237,.10); color: var(--accent2); }
-    .bot-actions .dl:hover    { background: rgba(124,58,237,.20); }
-    .bot-actions .del   { background: rgba(244,63,94,.08); color: var(--danger); }
-    .bot-actions .del:hover   { background: rgba(244,63,94,.16); }
-
-    /* ---- Log viewer ---- */
-    .log-modal-overlay {
-      display: none; position: fixed; inset: 0; z-index: 100;
-      background: rgba(0,0,0,0.65); backdrop-filter: blur(6px);
-      align-items: center; justify-content: center; padding: 20px;
-    }
-    .log-modal-overlay.active { display: flex; }
-
-    .log-modal {
-      background: var(--card); backdrop-filter: blur(20px);
-      border: 1px solid var(--border); border-radius: 20px;
-      width: 100%; max-width: 780px; max-height: 80vh;
-      display: flex; flex-direction: column;
-      box-shadow: 0 30px 80px rgba(0,0,0,0.7);
-    }
-    .log-modal-header {
-      display: flex; align-items: center; justify-content: space-between;
-      padding: 18px 22px; border-bottom: 1px solid var(--border);
-    }
-    .log-modal-header h3 { font-size: 15px; font-weight: 700; }
-    .log-modal-header .close-btn {
-      width: 32px; height: 32px; border-radius: 8px;
-      border: none; background: rgba(255,255,255,0.04); color: var(--text);
-      cursor: pointer; font-size: 16px; transition: 0.2s;
-    }
-    .log-modal-header .close-btn:hover { background: rgba(255,255,255,0.10); }
-    .log-modal-body {
-      flex: 1; overflow-y: auto; padding: 18px 22px;
-      font-family: 'JetBrains Mono', 'Fira Code', monospace; font-size: 12px;
-      white-space: pre-wrap; word-break: break-all;
-      line-height: 1.6; color: #cbd5e1;
-    }
-    .log-modal-footer {
-      display: flex; align-items: center; justify-content: space-between;
-      padding: 12px 22px; border-top: 1px solid var(--border);
-      font-size: 12px; color: var(--muted);
-    }
-    .log-modal-footer .status-indicator {
-      display: flex; align-items: center; gap: 6px;
-    }
-    .log-modal-footer .dot {
-      width: 8px; height: 8px; border-radius: 50%;
-    }
-    .dot.green { background: var(--success); box-shadow: 0 0 8px var(--success); }
-    .dot.red   { background: var(--danger); }
-
-    .empty-state {
-      text-align: center; padding: 50px 20px; color: var(--muted);
-    }
-    .empty-state i { font-size: 48px; margin-bottom: 14px; opacity: 0.3; }
-    .empty-state p { font-size: 14px; }
-
-    .footer-credit {
-      text-align: center; margin-top: 40px; padding: 20px;
-      font-size: 12px; color: var(--muted); border-top: 1px solid var(--border);
-    }
-
-    @media (max-width: 600px) {
-      .nav { flex-direction: column; gap: 10px; text-align: center; }
-      .bot-grid { grid-template-columns: 1fr; }
-      .log-modal { max-height: 90vh; }
-    }
-  </style>
+  <link rel="stylesheet" href="/static/nexus.css" />
 </head>
 <body>
-<div class="container">
-  <!-- Nav -->
-  <div class="nav">
-    <div class="nav-brand">
-      <div class="logo"><i class="fa-solid fa-crown"></i></div>
-      <div><span>NEXUS</span><small>VIP DARK GOD</small></div>
-    </div>
-    <div class="nav-user">
-      <span class="uname"><i class="fa-regular fa-user"></i> {{ username }}</span>
-      <a href="/logout" title="Logout"><i class="fa-solid fa-right-from-bracket"></i></a>
+<div class="header">
+  <div class="header-brand">
+    <div class="logo"><i class="fa-solid fa-crown"></i></div>
+    <div>
+      <span>NEXUS</span>
+      <div style="font-size:10px;color:var(--text-muted);font-weight:400;letter-spacing:0.05em">VIP DARK GOD</div>
     </div>
   </div>
+  <div class="header-actions">
+    <span style="font-size:13px;color:var(--text-secondary)"><i class="fa-regular fa-user" style="color:var(--accent);margin-right:6px"></i>{{ username }}</span>
+    <a href="/logout" class="btn-icon" title="Logout"><i class="fa-solid fa-right-from-bracket"></i></a>
+  </div>
+</div>
 
-  <!-- Stats -->
-  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;margin-bottom:20px">
-    <div style="background:var(--card);backdrop-filter:blur(12px);border:1px solid var(--border);border-radius:14px;padding:16px;text-align:center">
-      <div style="font-size:22px;font-weight:800;color:var(--accent)">{{ user_count|default(0) }}</div>
-      <div style="font-size:11px;color:var(--muted);margin-top:4px">Projects</div>
+<div class="main">
+<div class="main-content" style="padding-top:88px">
+
+  <!-- Stats Row -->
+  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:16px;margin-bottom:32px">
+    <div class="stat-card">
+      <div class="icon"><i class="fa-solid fa-cube"></i></div>
+      <div class="value">{{ user_count|default(0) }}</div>
+      <div class="label">Projects</div>
     </div>
-    <div style="background:var(--card);backdrop-filter:blur(12px);border:1px solid var(--border);border-radius:14px;padding:16px;text-align:center">
-      <div style="font-size:22px;font-weight:800;color:var(--success)">{{ disk_usage|default('—') }}</div>
-      <div style="font-size:11px;color:var(--muted);margin-top:4px">Disk Used</div>
+    <div class="stat-card">
+      <div class="icon" style="color:var(--success)"><i class="fa-solid fa-database"></i></div>
+      <div class="value" style="color:var(--success)">{{ disk_usage|default('—') }}</div>
+      <div class="label">Disk Used</div>
     </div>
-    <div style="background:var(--card);backdrop-filter:blur(12px);border:1px solid var(--border);border-radius:14px;padding:16px;text-align:center">
-      <div style="font-size:22px;font-weight:800;color:var(--warning)">{{ expire|default('—') }}</div>
-      <div style="font-size:11px;color:var(--muted);margin-top:4px">Expiry</div>
+    <div class="stat-card">
+      <div class="icon" style="color:var(--warning)"><i class="fa-regular fa-clock"></i></div>
+      <div class="value" style="color:var(--warning)">{{ expire|default('—') }}</div>
+      <div class="label">Expiry</div>
     </div>
-    <div style="background:var(--card);backdrop-filter:blur(12px);border:1px solid var(--border);border-radius:14px;padding:16px;text-align:center">
-      <div style="font-size:22px;font-weight:800;color:var(--accent2)">{{ total_users|default('—') }}</div>
-      <div style="font-size:11px;color:var(--muted);margin-top:4px">Total Users</div>
+    <div class="stat-card">
+      <div class="icon" style="color:var(--accent-purple)"><i class="fa-solid fa-users"></i></div>
+      <div class="value" style="color:var(--accent-purple)">{{ total_users|default('—') }}</div>
+      <div class="label">Total Users</div>
     </div>
   </div>
 
   <!-- Upload -->
-  <div class="upload-card">
-    <form action="/upload" method="post" enctype="multipart/form-data">
-      <label class="file-label"><i class="fa-solid fa-cloud-arrow-up"></i> Choose ZIP file
-        <input type="file" name="file" accept=".zip" required />
+  <div class="card" style="border-style:dashed;border-color:rgba(0,212,255,0.15);margin-bottom:32px">
+    <form action="/upload" method="post" enctype="multipart/form-data" style="display:flex;flex-direction:column;align-items:center;gap:12px">
+      <div style="font-size:13px;color:var(--text-secondary);margin-bottom:4px">
+        <i class="fa-solid fa-cloud-arrow-up" style="color:var(--accent);margin-right:6px"></i>
+        Deploy a new project
+      </div>
+      <label style="display:inline-flex;align-items:center;gap:8px;padding:10px 20px;border-radius:var(--radius-md);background:rgba(0,212,255,0.06);border:1px solid rgba(0,212,255,0.15);cursor:pointer;font-size:13px;font-weight:600;transition:var(--transition)">
+        <i class="fa-solid fa-folder-zip"></i> Choose ZIP file
+        <input type="file" name="file" accept=".zip" required style="display:none" />
       </label>
-      <button type="submit" class="btn-upload"><i class="fa-solid fa-upload"></i> Deploy Project</button>
-      <div class="hint">Upload a .zip containing main.py, app.py, bot.py, or index.js / server.js</div>
+      <button type="submit" class="btn btn-primary"><i class="fa-solid fa-upload"></i> Deploy Project</button>
+      <div style="font-size:11px;color:var(--text-muted)">Upload a .zip containing main.py, app.py, bot.py, or index.js / server.js</div>
     </form>
   </div>
 
-  <!-- Projects -->
-  <div class="section-title"><i class="fa-solid fa-server"></i> Your Projects</div>
+  <!-- Projects Section -->
+  <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px">
+    <i class="fa-solid fa-server" style="color:var(--accent);font-size:16px"></i>
+    <h2 class="h2" style="font-size:16px;text-transform:none;letter-spacing:normal;color:var(--text)">Your Projects</h2>
+  </div>
 
   {% if apps %}
-  <div class="bot-grid">
+  <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:16px">
     {% for app in apps %}
-    <div class="bot-card">
-      <div class="status-bar {{ 'running' if app.running else 'stopped' }}"></div>
-      <div class="bot-head">
-        <span class="bot-name"><i class="fa-solid fa-cube"></i> {{ app.name }}</span>
-        <span class="status-badge {{ 'on' if app.running else 'off' }}">
+    <div class="card" style="overflow:hidden;position:relative">
+      <div style="position:absolute;top:0;left:0;right:0;height:3px;background:{{ 'var(--success)' if app.running else 'var(--danger)' }};transition:var(--transition)"></div>
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+        <span style="font-weight:600;font-size:15px;display:flex;align-items:center;gap:8px">
+          <i class="fa-solid fa-cube" style="color:var(--accent);font-size:13px"></i> {{ app.name }}
+        </span>
+        <span style="font-size:10px;font-weight:700;text-transform:uppercase;padding:4px 10px;border-radius:6px;letter-spacing:0.5px;background:{{ 'rgba(16,185,129,0.12)' if app.running else 'rgba(239,68,68,0.12)' }};color:{{ 'var(--success)' if app.running else 'var(--danger)' }}">
           {{ 'RUNNING' if app.running else 'STOPPED' }}
         </span>
       </div>
-      <div class="bot-info">
+      <div style="font-size:12px;color:var(--text-secondary);margin-bottom:14px">
         <i class="fa-regular fa-clock"></i>
         {% if app.running %} Process active {% else %} Idle {% endif %}
       </div>
-      <div class="bot-actions">
+      <div style="display:flex;flex-wrap:wrap;gap:6px">
         {% if not app.running %}
-          <a href="/run/{{ app.name }}" class="run"><i class="fa-solid fa-play"></i> Run</a>
+          <a href="/run/{{ app.name }}" class="btn btn-sm btn-ghost" style="border-color:rgba(16,185,129,0.3);color:var(--success)"><i class="fa-solid fa-play"></i> Run</a>
         {% else %}
-          <a href="/stop/{{ app.name }}" class="stop"><i class="fa-solid fa-stop"></i> Stop</a>
+          <a href="/stop/{{ app.name }}" class="btn btn-sm btn-ghost" style="border-color:rgba(239,68,68,0.3);color:var(--danger)"><i class="fa-solid fa-stop"></i> Stop</a>
         {% endif %}
-        <a href="/restart/{{ app.name }}" class="restart"><i class="fa-solid fa-rotate"></i> Restart</a>
-        <a href="/files/{{ app.name }}" class="edit"><i class="fa-solid fa-code"></i> Files</a>
-        <a href="#" class="edit" onclick="openLog('{{ app.name }}'); return false;"><i class="fa-regular fa-file-lines"></i> Logs</a>
-        <a href="#" class="edit" onclick="openPkg('{{ app.name }}'); return false;"><i class="fa-solid fa-box"></i> Pkg</a>
-        <a href="#" class="edit" onclick="openTerm('{{ app.name }}'); return false;"><i class="fa-solid fa-terminal"></i> Term</a>
-        <a href="/download/{{ app.name }}" class="dl"><i class="fa-solid fa-download"></i> ZIP</a>
-        <a href="/delete/{{ app.name }}" class="del" onclick="return confirm('Delete this project permanently?')"><i class="fa-solid fa-trash-can"></i> Delete</a>
+        <a href="/restart/{{ app.name }}" class="btn btn-sm btn-ghost" style="border-color:rgba(245,158,11,0.2);color:var(--warning)"><i class="fa-solid fa-rotate"></i> Restart</a>
+        <a href="/files/{{ app.name }}" class="btn btn-sm btn-ghost"><i class="fa-solid fa-code"></i> Files</a>
+        <a href="#" class="btn btn-sm btn-ghost" onclick="openLog('{{ app.name }}');return false"><i class="fa-regular fa-file-lines"></i> Logs</a>
+        <a href="#" class="btn btn-sm btn-ghost" onclick="openPkg('{{ app.name }}');return false"><i class="fa-solid fa-box"></i> Pkg</a>
+        <a href="#" class="btn btn-sm btn-ghost" onclick="openTerm('{{ app.name }}');return false"><i class="fa-solid fa-terminal"></i> Term</a>
+        <a href="/download/{{ app.name }}" class="btn btn-sm btn-ghost" style="border-color:rgba(139,92,246,0.2);color:var(--accent-purple)"><i class="fa-solid fa-download"></i> ZIP</a>
+        <a href="/delete/{{ app.name }}" class="btn btn-sm btn-ghost" style="border-color:rgba(239,68,68,0.2);color:var(--danger)" onclick="return confirm('Delete this project permanently?')"><i class="fa-solid fa-trash-can"></i> Delete</a>
       </div>
     </div>
     {% endfor %}
   </div>
   {% else %}
-  <div class="empty-state">
-    <i class="fa-regular fa-folder-open"></i>
-    <p>No projects yet. Upload a ZIP to get started.</p>
+  <div class="card" style="text-align:center;padding:60px 20px;border-style:dashed">
+    <div style="font-size:48px;margin-bottom:14px;opacity:0.3;color:var(--text-muted)"><i class="fa-regular fa-folder-open"></i></div>
+    <p style="color:var(--text-muted);font-size:14px">No projects yet. Upload a ZIP to get started.</p>
   </div>
   {% endif %}
 
-  <div class="footer-credit">
-    <strong>VIP DARK GOD</strong> &middot; <a href="https://t.me/VIP_DARK_GOD" target="_blank" style="color:var(--accent);text-decoration:none;">@VIP_DARK_GOD</a>
-    &middot; Website-Nexus PRO
+  <div style="text-align:center;margin-top:48px;padding:20px;font-size:11px;color:var(--text-muted);border-top:1px solid var(--border)">
+    <strong style="color:var(--accent)">VIP DARK GOD</strong> &middot;
+    <a href="https://t.me/VIP_DARK_GOD" target="_blank" style="color:var(--accent)">@VIP_DARK_GOD</a>
+    &middot; Nexus Panel PRO
   </div>
+</div>
 </div>
 
 <!-- Log Modal -->
-<div class="log-modal-overlay" id="logModal">
-  <div class="log-modal">
-    <div class="log-modal-header">
-      <h3><i class="fa-regular fa-file-lines" style="color:var(--accent);margin-right:8px;"></i><span id="logTitle">Logs</span></h3>
-      <button class="close-btn" onclick="closeLogModal()"><i class="fa-solid fa-xmark"></i></button>
+<div class="modal-overlay" id="logModal">
+  <div class="modal" style="max-width:780px;max-height:80vh;display:flex;flex-direction:column;padding:0">
+    <div class="log-modal-header" style="display:flex;align-items:center;justify-content:space-between;padding:18px 24px;border-bottom:1px solid var(--border)">
+      <h3 style="font-size:15px;font-weight:600"><i class="fa-regular fa-file-lines" style="color:var(--accent);margin-right:8px"></i><span id="logTitle">Logs</span></h3>
+      <button class="btn-icon" onclick="closeLogModal()"><i class="fa-solid fa-xmark"></i></button>
     </div>
-    <div class="log-modal-body" id="logContent">Loading logs...</div>
-    <div class="log-modal-footer">
-      <div class="status-indicator">
+    <div style="flex:1;overflow-y:auto;padding:18px 24px;font-family:var(--font-mono);font-size:12px;white-space:pre-wrap;word-break:break-all;line-height:1.6;color:#cbd5e1;background:rgba(0,0,0,0.3)" id="logContent">Loading logs...</div>
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 24px;border-top:1px solid var(--border);font-size:12px;color:var(--text-muted)">
+      <div style="display:flex;align-items:center;gap:6px">
         <span class="dot" id="logStatusDot"></span>
         <span id="logStatusText">STOPPED</span>
       </div>
@@ -335,34 +138,29 @@
   </div>
 </div>
 
-<!-- Package Install Modal -->
-<div class="log-modal-overlay" id="pkgModal">
-  <div class="log-modal" style="max-width:500px">
-    <div class="log-modal-header">
-      <h3><i class="fa-solid fa-box" style="color:var(--accent);margin-right:8px;"></i> <span id="pkgTitle">Install Packages</span></h3>
-      <button class="close-btn" onclick="closePkgModal()"><i class="fa-solid fa-xmark"></i></button>
-    </div>
-    <div style="padding:18px 22px">
-      <input type="text" id="pkgInput" placeholder="package name (e.g. requests) or npm:lodash" style="width:100%;padding:10px 14px;border-radius:10px;border:1px solid var(--border);background:rgba(0,0,0,0.3);color:var(--text);font-size:13px;font-family:inherit;outline:none;margin-bottom:12px" />
-      <button class="btn-upload" onclick="installPkg()" style="width:100%"><i class="fa-solid fa-download"></i> Install</button>
-      <pre id="pkgOutput" style="margin-top:12px;padding:12px;border-radius:10px;background:rgba(0,0,0,0.3);font-size:12px;max-height:200px;overflow-y:auto;display:none;white-space:pre-wrap;word-break:break-all"></pre>
-    </div>
+<!-- Package Modal -->
+<div class="modal-overlay" id="pkgModal">
+  <div class="modal" style="max-width:500px">
+    <h3><i class="fa-solid fa-box" style="color:var(--accent);margin-right:8px"></i> <span id="pkgTitle">Install Package</span></h3>
+    <input type="text" id="pkgInput" class="input" placeholder="package name (e.g. requests) or npm:lodash" style="margin-bottom:12px" />
+    <button class="btn btn-primary" onclick="installPkg()" style="width:100%"><i class="fa-solid fa-download"></i> Install</button>
+    <pre id="pkgOutput" style="margin-top:12px;padding:12px;border-radius:var(--radius-md);background:rgba(0,0,0,0.3);font-size:12px;max-height:200px;overflow-y:auto;display:none;white-space:pre-wrap;word-break:break-all;font-family:var(--font-mono)"></pre>
   </div>
 </div>
 
 <!-- Terminal Modal -->
-<div class="log-modal-overlay" id="termModal">
-  <div class="log-modal" style="max-width:800px">
-    <div class="log-modal-header">
-      <h3><i class="fa-solid fa-terminal" style="color:var(--accent);margin-right:8px;"></i> <span id="termTitle">Terminal</span></h3>
-      <button class="close-btn" onclick="closeTermModal()"><i class="fa-solid fa-xmark"></i></button>
+<div class="modal-overlay" id="termModal">
+  <div class="modal" style="max-width:800px;max-height:80vh;display:flex;flex-direction:column;padding:0">
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:18px 24px;border-bottom:1px solid var(--border)">
+      <h3 style="font-size:15px;font-weight:600"><i class="fa-solid fa-terminal" style="color:var(--accent);margin-right:8px"></i> <span id="termTitle">Terminal</span></h3>
+      <button class="btn-icon" onclick="closeTermModal()"><i class="fa-solid fa-xmark"></i></button>
     </div>
-    <div style="padding:18px 22px;display:flex;flex-direction:column">
-      <pre id="termOutput" style="padding:12px;border-radius:10px;background:rgba(0,0,0,0.5);font-size:12px;min-height:200px;max-height:400px;overflow-y:auto;white-space:pre-wrap;word-break:break-all;font-family:'JetBrains Mono',monospace;margin-bottom:12px;color:#e2e8f0"></pre>
+    <div style="flex:1;padding:18px 24px;display:flex;flex-direction:column">
+      <pre id="termOutput" style="padding:12px;border-radius:var(--radius-md);background:rgba(0,0,0,0.5);font-size:12px;min-height:200px;max-height:400px;overflow-y:auto;white-space:pre-wrap;word-break:break-all;font-family:var(--font-mono);margin-bottom:12px;color:#e2e8f0"></pre>
       <div style="display:flex;gap:8px">
-        <input type="text" id="termInput" placeholder="$ enter command..." style="flex:1;padding:10px 14px;border-radius:10px;border:1px solid var(--border);background:rgba(0,0,0,0.3);color:var(--text);font-size:13px;font-family:inherit;outline:none" onkeydown="if(event.key==='Enter')runCmd()" />
-        <button class="btn-upload" onclick="runCmd()"><i class="fa-solid fa-play"></i></button>
-        <button class="btn-upload" onclick="document.getElementById('termOutput').textContent=''" style="background:rgba(244,63,94,.12);color:var(--danger)"><i class="fa-solid fa-eraser"></i></button>
+        <input type="text" id="termInput" class="input" placeholder="$ enter command..." onkeydown="if(event.key==='Enter')runCmd()" />
+        <button class="btn btn-primary btn-sm" onclick="runCmd()"><i class="fa-solid fa-play"></i></button>
+        <button class="btn btn-sm btn-ghost" style="border-color:rgba(239,68,68,0.3);color:var(--danger)" onclick="document.getElementById('termOutput').textContent=''"><i class="fa-solid fa-eraser"></i></button>
       </div>
     </div>
   </div>
@@ -371,7 +169,6 @@
 <script>
   let logProject = null;
   let logInterval = null;
-
   function openLog(project) {
     logProject = project;
     document.getElementById('logTitle').textContent = project + ' — Logs';
@@ -380,15 +177,30 @@
     if (logInterval) clearInterval(logInterval);
     logInterval = setInterval(fetchLog, 3000);
   }
-
   function closeLogModal() {
     document.getElementById('logModal').classList.remove('active');
     if (logInterval) { clearInterval(logInterval); logInterval = null; }
     logProject = null;
   }
-
-  function closeModal(id) {
-    document.getElementById(id).classList.remove('active');
+  function fetchLog() {
+    if (!logProject) return;
+    fetch('/get-log/' + logProject)
+      .then(r => r.json())
+      .then(data => {
+        document.getElementById('logContent').textContent = data.log || 'No log output yet.';
+        const dot = document.getElementById('logStatusDot');
+        const statusText = document.getElementById('logStatusText');
+        if (data.status === 'RUNNING') {
+          dot.className = 'dot green';
+          statusText.textContent = 'RUNNING';
+        } else {
+          dot.className = 'dot red';
+          statusText.textContent = 'STOPPED';
+        }
+      })
+      .catch(() => {
+        document.getElementById('logContent').textContent = 'Failed to fetch log.';
+      });
   }
 
   // Package install
@@ -401,10 +213,7 @@
     document.getElementById('pkgOutput').textContent = '';
     document.getElementById('pkgModal').classList.add('active');
   }
-  function closePkgModal() {
-    document.getElementById('pkgModal').classList.remove('active');
-    pkgProject = null;
-  }
+  function closePkgModal() { document.getElementById('pkgModal').classList.remove('active'); pkgProject = null; }
   function installPkg() {
     var pkg = document.getElementById('pkgInput').value.trim();
     if (!pkg || !pkgProject) return;
@@ -417,9 +226,7 @@
       body: JSON.stringify({project: pkgProject, package: pkg})
     }).then(function(r) { return r.json(); }).then(function(d) {
       out.textContent = d.output || (d.status === 'success' ? 'Installed successfully.' : 'Error: ' + (d.error || 'Unknown'));
-    }).catch(function(e) {
-      out.textContent = 'Error: ' + e.message;
-    });
+    }).catch(function(e) { out.textContent = 'Error: ' + e.message; });
   }
 
   // Terminal
@@ -432,10 +239,7 @@
     document.getElementById('termModal').classList.add('active');
     setTimeout(function() { document.getElementById('termInput').focus(); }, 300);
   }
-  function closeTermModal() {
-    document.getElementById('termModal').classList.remove('active');
-    termProject = null;
-  }
+  function closeTermModal() { document.getElementById('termModal').classList.remove('active'); termProject = null; }
   function runCmd() {
     var cmd = document.getElementById('termInput').value.trim();
     if (!cmd || !termProject) return;
@@ -449,41 +253,14 @@
     }).then(function(r) { return r.json(); }).then(function(d) {
       out.textContent += (d.output || '(no output)') + '\n';
       out.scrollTop = out.scrollHeight;
-    }).catch(function(e) {
-      out.textContent += 'Error: ' + e.message + '\n';
-    });
+    }).catch(function(e) { out.textContent += 'Error: ' + e.message + '\n'; });
   }
 
-  // close modals on overlay click
-  document.getElementById('logModal').addEventListener('click', function(e) {
-    if (e.target === this) closeLogModal();
-  });
-  document.getElementById('pkgModal').addEventListener('click', function(e) {
-    if (e.target === this) closePkgModal();
-  });
-  document.getElementById('termModal').addEventListener('click', function(e) {
-    if (e.target === this) closeTermModal();
-  });
-
-  // ESC key
-  document.addEventListener('keydown', function(e) {
-    if (e.key === 'Escape') {
-      closeLogModal();
-      closePkgModal();
-      closeTermModal();
-    }
-  });
-  }
-
-  // close on overlay click
-  document.getElementById('logModal').addEventListener('click', function(e) {
-    if (e.target === this) closeLogModal();
-  });
-
-  // ESC key
-  document.addEventListener('keydown', function(e) {
-    if (e.key === 'Escape') closeLogModal();
-  });
+  // Overlay click close
+  document.getElementById('logModal').addEventListener('click', function(e) { if (e.target === this) closeLogModal(); });
+  document.getElementById('pkgModal').addEventListener('click', function(e) { if (e.target === this) closePkgModal(); });
+  document.getElementById('termModal').addEventListener('click', function(e) { if (e.target === this) closeTermModal(); });
+  document.addEventListener('keydown', function(e) { if (e.key === 'Escape') { closeLogModal(); closePkgModal(); closeTermModal(); } });
 </script>
 </body>
 </html>

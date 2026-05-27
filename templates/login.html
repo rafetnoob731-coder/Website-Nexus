@@ -4,175 +4,66 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>NEXUS — VIP DARK GOD</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+  <link rel="stylesheet" href="/static/nexus.css" />
   <style>
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
-    :root {
-      --bg-primary: #0a0b0f;
-      --bg-card: rgba(16, 18, 28, 0.85);
-      --accent-1: #00f0ff;
-      --accent-2: #7c3aed;
-      --accent-3: #f43f5e;
-      --text: #e2e8f0;
-      --text-muted: #94a3b8;
-      --glass-border: rgba(255,255,255,0.06);
-    }
-
     body {
-      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-      background: var(--bg-primary);
-      color: var(--text);
       min-height: 100vh;
       display: flex;
       align-items: center;
       justify-content: center;
       overflow: hidden;
       position: relative;
+      background: var(--bg-primary);
     }
-
-    /* ---- Animated background ---- */
     .bg-mesh {
       position: fixed; inset: 0; z-index: 0;
       background:
-        radial-gradient(ellipse at 20% 50%, rgba(124, 58, 237, 0.15) 0%, transparent 60%),
-        radial-gradient(ellipse at 80% 20%, rgba(0, 240, 255, 0.10) 0%, transparent 50%),
-        radial-gradient(ellipse at 40% 80%, rgba(244, 63, 94, 0.08) 0%, transparent 50%);
+        radial-gradient(ellipse at 20% 50%, rgba(139,92,246,0.12) 0%, transparent 60%),
+        radial-gradient(ellipse at 80% 20%, rgba(0,212,255,0.08) 0%, transparent 50%),
+        radial-gradient(ellipse at 40% 80%, rgba(236,72,153,0.06) 0%, transparent 50%);
     }
-
     .grid-overlay {
       position: fixed; inset: 0; z-index: 1;
       background-image:
-        linear-gradient(rgba(255,255,255,0.02) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(255,255,255,0.02) 1px, transparent 1px);
+        linear-gradient(rgba(255,255,255,0.015) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,0.015) 1px, transparent 1px);
       background-size: 60px 60px;
       mask-image: radial-gradient(ellipse at center, black 30%, transparent 70%);
       -webkit-mask-image: radial-gradient(ellipse at center, black 30%, transparent 70%);
     }
-
     .orb {
-      position: fixed; border-radius: 50%; filter: blur(100px); opacity: 0.3; z-index: 0;
-      animation: orbFloat 12s ease-in-out infinite alternate;
+      position: fixed; border-radius: 50%; filter: blur(100px); opacity: 0.25; z-index: 0;
+      animation: float 12s ease-in-out infinite alternate;
     }
-    .orb-1 { width: 400px; height: 400px; background: var(--accent-1); top: -10%; left: -10%; }
-    .orb-2 { width: 300px; height: 300px; background: var(--accent-2); bottom: -10%; right: -10%; animation-delay: -4s; }
-    .orb-3 { width: 200px; height: 200px; background: var(--accent-3); top: 50%; left: 50%; animation-delay: -8s; }
-
-    @keyframes orbFloat {
-      0%   { transform: translate(0, 0) scale(1); }
-      100% { transform: translate(40px, 60px) scale(1.15); }
-    }
-
-    /* ---- Login card ---- */
-    .login-wrapper {
-      position: relative; z-index: 10;
-      width: 100%; max-width: 420px; padding: 20px;
-    }
-
+    .orb-1 { width: 400px; height: 400px; background: var(--accent); top: -10%; left: -10%; }
+    .orb-2 { width: 300px; height: 300px; background: var(--accent-purple); bottom: -10%; right: -10%; animation-delay: -4s; }
+    .orb-3 { width: 200px; height: 200px; background: var(--accent-magenta); top: 50%; left: 50%; animation-delay: -8s; }
+    #particles-canvas { position: fixed; inset: 0; z-index: 2; pointer-events: none; }
+    .login-wrapper { position: relative; z-index: 10; width: 100%; max-width: 420px; padding: 20px; }
     .login-card {
-      background: var(--bg-card);
+      background: rgba(17,24,39,0.75);
       backdrop-filter: blur(24px);
       -webkit-backdrop-filter: blur(24px);
       border: 1px solid var(--glass-border);
       border-radius: 24px;
       padding: 40px 32px;
-      box-shadow: 0 20px 60px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,255,255,0.04);
-      transition: box-shadow 0.3s;
-    }
-
-    .login-card:hover {
-      box-shadow: 0 20px 80px rgba(0, 240, 255, 0.08), 0 20px 60px rgba(0,0,0,0.6);
-    }
-
-    /* ---- Logo / Brand ---- */
-    .brand {
-      text-align: center; margin-bottom: 32px;
+      box-shadow: 0 25px 60px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,255,255,0.04);
+      animation: float 6s ease-in-out infinite;
     }
     .brand-icon {
       width: 72px; height: 72px; margin: 0 auto 16px;
-      background: linear-gradient(135deg, var(--accent-1), var(--accent-2));
+      background: var(--gradient);
       border-radius: 20px;
       display: flex; align-items: center; justify-content: center;
-      font-size: 32px; color: #fff;
-      box-shadow: 0 8px 32px rgba(0, 240, 255, 0.25);
+      font-size: 32px; color: #0B0E14;
+      box-shadow: 0 8px 32px rgba(0,212,255,0.25);
     }
-    .brand h1 {
-      font-size: 22px; font-weight: 800; letter-spacing: -0.5px;
-      background: linear-gradient(135deg, var(--accent-1), var(--accent-2));
-      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-    }
-    .brand p {
-      font-size: 13px; color: var(--text-muted); margin-top: 4px;
-    }
-
-    /* ---- Form ---- */
     .form-group { margin-bottom: 18px; }
-
     .form-group label {
       display: block; font-size: 12px; font-weight: 600; text-transform: uppercase;
       letter-spacing: 0.8px; color: var(--text-muted); margin-bottom: 6px;
     }
-
-    .input-wrap {
-      position: relative;
-    }
-    .input-wrap i {
-      position: absolute; left: 14px; top: 50%; transform: translateY(-50%);
-      color: var(--text-muted); font-size: 15px; pointer-events: none;
-    }
-
-    .input-wrap select,
-    .input-wrap input {
-      width: 100%; padding: 13px 14px 13px 42px;
-      background: rgba(255,255,255,0.04);
-      border: 1px solid rgba(255,255,255,0.08);
-      border-radius: 12px;
-      color: var(--text); font-size: 14px; font-family: inherit;
-      outline: none; transition: 0.25s;
-    }
-    .input-wrap select { padding-left: 14px; cursor: pointer; appearance: none; }
-    .input-wrap select:focus,
-    .input-wrap input:focus {
-      border-color: var(--accent-1);
-      box-shadow: 0 0 0 3px rgba(0, 240, 255, 0.12);
-      background: rgba(255,255,255,0.06);
-    }
-    .input-wrap input::placeholder { color: var(--text-muted); opacity: 0.6; }
-
-    .btn-submit {
-      width: 100%; padding: 14px; margin-top: 8px;
-      border: none; border-radius: 12px;
-      background: linear-gradient(135deg, var(--accent-1), var(--accent-2));
-      color: #fff; font-size: 15px; font-weight: 700; font-family: inherit;
-      cursor: pointer; transition: 0.3s;
-      display: flex; align-items: center; justify-content: center; gap: 8px;
-    }
-    .btn-submit:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 8px 30px rgba(0, 240, 255, 0.30);
-    }
-    .btn-submit:active { transform: translateY(0); }
-
-    .footer-text {
-      text-align: center; margin-top: 24px; padding-top: 20px;
-      border-top: 1px solid rgba(255,255,255,0.05);
-    }
-    .footer-text a {
-      color: var(--accent-1); text-decoration: none; font-weight: 600;
-      font-size: 13px; transition: 0.2s;
-    }
-    .footer-text a:hover { text-shadow: 0 0 12px var(--accent-1); }
-    .footer-text .credit {
-      margin-top: 12px; font-size: 11px; color: var(--text-muted); opacity: 0.5;
-    }
-
-    /* ---- particle canvas overlay ---- */
-    #particles-canvas {
-      position: fixed; inset: 0; z-index: 2; pointer-events: none;
-    }
-
     @media (max-width: 480px) {
       .login-card { padding: 28px 20px; }
     }
@@ -188,19 +79,25 @@
 
   <div class="login-wrapper">
     <div class="login-card">
-      <div class="brand">
+      <div style="text-align:center;margin-bottom:32px">
         <div class="brand-icon"><i class="fa-solid fa-crown"></i></div>
-        <h1>NEXUS PANEL</h1>
-        <p>Powered by <strong>VIP DARK GOD</strong></p>
+        <h1 style="font-size:22px;font-weight:800;letter-spacing:-0.5px;background:var(--gradient);-webkit-background-clip:text;-webkit-text-fill-color:transparent">NEXUS PANEL</h1>
+        <p style="font-size:13px;color:var(--text-secondary);margin-top:4px">Powered by <strong style="color:var(--accent)">VIP DARK GOD</strong></p>
+        {% if total_users is defined and total_users > 0 %}
+        <div style="margin-top:12px;display:flex;align-items:center;justify-content:center;gap:16px;font-size:11px;color:var(--text-muted)">
+          <span><i class="fa-solid fa-users" style="color:var(--accent)"></i> {{ total_users }} registered</span>
+          <span><i class="fa-solid fa-circle" style="color:var(--success);font-size:6px;vertical-align:middle"></i> 24/7 Active</span>
+        </div>
+        {% endif %}
       </div>
 
       <form method="post" action="/login">
         <div class="form-group">
           <label>Access Level</label>
           <div class="input-wrap">
-            <select name="login_type">
-              <option value="user">👤 User Access</option>
-              <option value="admin">⚡ Admin Root</option>
+            <select name="login_type" class="input">
+              <option value="user">User Access</option>
+              <option value="admin">Admin Root</option>
             </select>
           </div>
         </div>
@@ -209,7 +106,7 @@
           <label>Username</label>
           <div class="input-wrap">
             <i class="fa-solid fa-user"></i>
-            <input type="text" name="username" placeholder="Enter nickname" required />
+            <input type="text" name="username" class="input" placeholder="Enter nickname" required />
           </div>
         </div>
 
@@ -217,23 +114,22 @@
           <label>Password</label>
           <div class="input-wrap">
             <i class="fa-solid fa-lock"></i>
-            <input type="password" name="password" placeholder="••••••••" required />
+            <input type="password" name="password" class="input" placeholder="&#8226;&#8226;&#8226;&#8226;&#8226;&#8226;&#8226;&#8226;" required />
           </div>
         </div>
 
-        <button type="submit" class="btn-submit">
-          <i class="fa-solid fa-arrow-right-to-bracket"></i> Access System
+        <button type="submit" class="btn btn-primary" style="width:100%;padding:14px;margin-top:8px;font-size:15px">
+          <i class="fa-solid fa-arrow-right-to-bracket"></i> Authenticate
         </button>
       </form>
 
-      <div class="footer-text">
-        {% if total_users is defined and total_users > 0 %}
-        <div style="font-size:12px;color:var(--text-muted);margin-bottom:8px"><i class="fa-solid fa-users"></i> {{ total_users }} registered user(s)</div>
-        {% endif %}
-        <a href="https://t.me/VIP_DARK_GOD" target="_blank">
+      <div style="text-align:center;margin-top:24px;padding-top:20px;border-top:1px solid rgba(255,255,255,0.05)">
+        <a href="https://t.me/VIP_DARK_GOD" target="_blank" style="color:var(--accent);font-weight:600;font-size:13px">
           <i class="fa-brands fa-telegram"></i> @VIP_DARK_GOD
         </a>
-        <div class="credit">Website-Nexus PRO &mdash; All rights reserved</div>
+        <div style="margin-top:12px;font-size:10px;color:var(--text-muted);opacity:0.5">
+          VIP DARK GOD &middot; Nexus Panel PRO &mdash; All rights reserved
+        </div>
       </div>
     </div>
   </div>
@@ -244,10 +140,7 @@
       const ctx = canvas.getContext('2d');
       let w, h, particles = [];
 
-      function resize() {
-        w = canvas.width = window.innerWidth;
-        h = canvas.height = window.innerHeight;
-      }
+      function resize() { w = canvas.width = window.innerWidth; h = canvas.height = window.innerHeight; }
       window.addEventListener('resize', resize);
       resize();
 
@@ -256,26 +149,25 @@
         reset() {
           this.x = Math.random() * w;
           this.y = Math.random() * h;
-          this.vx = (Math.random() - 0.5) * 0.8;
-          this.vy = (Math.random() - 0.5) * 0.8;
-          this.r = Math.random() * 2.5 + 0.5;
-          this.alpha = Math.random() * 0.5 + 0.2;
+          this.vx = (Math.random() - 0.5) * 0.6;
+          this.vy = (Math.random() - 0.5) * 0.6 - 0.2;
+          this.r = Math.random() * 2 + 0.5;
+          this.alpha = Math.random() * 0.3 + 0.1;
         }
         update() {
-          this.x += this.vx;
-          this.y += this.vy;
+          this.x += this.vx; this.y += this.vy;
           if (this.x < 0 || this.x > w) this.vx *= -1;
           if (this.y < 0 || this.y > h) this.vy *= -1;
         }
         draw() {
           ctx.beginPath();
           ctx.arc(this.x, this.y, this.r, 0, Math.PI * 2);
-          ctx.fillStyle = `rgba(0, 240, 255, ${this.alpha})`;
+          ctx.fillStyle = `rgba(0, 212, 255, ${this.alpha})`;
           ctx.fill();
         }
       }
 
-      for (let i = 0; i < 100; i++) particles.push(new Particle());
+      for (let i = 0; i < 80; i++) particles.push(new Particle());
 
       let mouseX = -999, mouseY = -999;
       canvas.addEventListener('mousemove', e => { mouseX = e.clientX; mouseY = e.clientY; });
@@ -283,27 +175,21 @@
 
       function animate() {
         ctx.clearRect(0, 0, w, h);
-        for (const p of particles) {
-          p.update();
-          p.draw();
-        }
-        // Draw connections
+        for (const p of particles) { p.update(); p.draw(); }
         for (let i = 0; i < particles.length; i++) {
           for (let j = i + 1; j < particles.length; j++) {
             const dx = particles[i].x - particles[j].x;
             const dy = particles[i].y - particles[j].y;
             const dist = Math.sqrt(dx * dx + dy * dy);
             if (dist < 140) {
-              // Connect to mouse too
               ctx.beginPath();
               ctx.moveTo(particles[i].x, particles[i].y);
               ctx.lineTo(particles[j].x, particles[j].y);
-              ctx.strokeStyle = `rgba(0, 240, 255, ${0.08 * (1 - dist / 140)})`;
-              ctx.lineWidth = 0.6;
+              ctx.strokeStyle = `rgba(0, 212, 255, ${0.06 * (1 - dist / 140)})`;
+              ctx.lineWidth = 0.5;
               ctx.stroke();
             }
           }
-          // connect to mouse
           const dx = particles[i].x - mouseX;
           const dy = particles[i].y - mouseY;
           const dist = Math.sqrt(dx * dx + dy * dy);
@@ -311,8 +197,8 @@
             ctx.beginPath();
             ctx.moveTo(particles[i].x, particles[i].y);
             ctx.lineTo(mouseX, mouseY);
-            ctx.strokeStyle = `rgba(124, 58, 237, ${0.12 * (1 - dist / 180)})`;
-            ctx.lineWidth = 1;
+            ctx.strokeStyle = `rgba(139, 92, 246, ${0.1 * (1 - dist / 180)})`;
+            ctx.lineWidth = 0.8;
             ctx.stroke();
           }
         }
