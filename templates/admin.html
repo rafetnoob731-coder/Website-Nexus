@@ -130,6 +130,21 @@
     </form>
   </div>
 
+  <!-- Bulk Create -->
+  <div class="admin-card">
+    <div class="admin-card-title"><i class="fa-solid fa-users-gear"></i> Bulk Create Users</div>
+    <form action="/admin/bulk_create" method="post">
+      <div style="margin-bottom:12px">
+        <textarea name="bulk" class="input" style="min-height:120px;font-family:var(--font-mono);font-size:12px" placeholder="username1 password1 30&#10;username2 password2 7&#10;username3&#10;(one per line: username password days)"></textarea>
+      </div>
+      <div class="form-row">
+        <input class="input" style="width:80px" type="number" name="days" placeholder="Default days" value="7" min="0" />
+        <span style="font-size:12px;color:var(--text-muted)">Default expiry (0 = unlimited, overridable per line)</span>
+        <button type="submit" class="btn btn-primary" style="background:var(--gradient-success);box-shadow:none"><i class="fa-solid fa-layer-group"></i> Create All</button>
+      </div>
+    </form>
+  </div>
+
   <!-- User Management -->
   <div class="admin-card">
     <div class="admin-card-title" style="justify-content:space-between">
