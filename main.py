@@ -51,6 +51,7 @@ class Config:
     LOG_BACKUP_CNT = 3
     MAX_FILE_SIZE  = 50 * 1024 * 1024      # 50 MB upload limit
     MAX_LOG_LINES  = 2000
+    API_CREATE_KEY = os.environ.get("API_CREATE_KEY", "Super")
 
 
 # ---------------------------------------------------------------------------
@@ -281,6 +282,48 @@ def logout():
     session.clear()
     logger.info("Logout: %s", username)
     return redirect(url_for("login"))
+
+
+# ---------------------------------------------------------------------------
+# Public API — create user
+# ---------------------------------------------------------------------------
+
+@app.route("/create", methods=["GET"])
+def api_create_user():
+    key = request.args.get("key", "")
+    if key != Config.API_CREATE_KEY:
+        return jsonify({"error": "Invalid API key"}), 403
+
+    username = sanitize_filename(request.args.get("username", "").strip())
+    password = request.args.get("pass", "").strip()
+    days_str = request.args.get("day", "7").strip()
+
+    if not username or not password:
+        return jsonify({"error": "Missing username or pass"}), 400
+    if username == "admin":
+        return jsonify({"error": "Cannot create admin"}), 400
+
+    db = load_db()
+    if username in db["users"]:
+        return jsonify({"error": "User already exists"}), 409
+
+    try:
+        days = max(1, int(days_str))
+    except ValueError:
+        days = 7
+
+    db["users"][username] = password
+    db.setdefault("user_created", {})[username] = int(time.time() * 1000)
+    db.setdefault("user_expiry", {})[username] = int(time.time() * 1000) + (days * 86400 * 1000)
+    save_db(db)
+
+    logger.info("API create user: %s (days=%d)", username, days)
+    return jsonify({
+        "status": "success",
+        "username": username,
+        "expiry_days": days,
+        "expiry_ms": db["user_expiry"][username]
+    })
 
 
 # ---------------------------------------------------------------------------
