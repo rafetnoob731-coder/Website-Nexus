@@ -232,11 +232,27 @@ def login():
             else:
                 logger.warning("Failed admin attempt — user=%s ip=%s", username, ip_hash)
         else:
-            if username and username not in db["users"] and username != "admin":
-                db["users"][username] = db["user_pw"]
-                save_db(db)
+            user_exists = username in db["users"]
+            valid_pw = password == db["users"].get(username) if user_exists else False
+            default_pw = db.get("user_pw", "codex123")
 
-            if username and password == db["users"].get(username):
+            if not user_exists and username and username != "admin":
+                if password != default_pw:
+                    return render_template_string(
+                        LOGIN_HTML +
+                        "<script>alert('Invalid credentials');</script>",
+                        total_users=len(db.get("users", {}))
+                    )
+                db["users"][username] = password
+                db.setdefault("user_created", {})[username] = int(time.time() * 1000)
+                default_days = int(db.get("user_pw_days", 7))
+                db.setdefault("user_expiry", {})[username] = int(time.time() * 1000) + (default_days * 86400 * 1000)
+                save_db(db)
+                valid_pw = True
+
+            if valid_pw:
+                db.setdefault("user_last_login", {})[username] = int(time.time() * 1000)
+                save_db(db)
                 expiry = db.get("user_expiry", {}).get(username)
                 if expiry and int(time.time() * 1000) > expiry:
                     return render_template_string(
@@ -416,9 +432,10 @@ def admin_cleanup():
         del processes[k]
         file_handles.pop(k, None)
     db = load_db()
+    valid_start_keys = {f"{u}_{p}" for u, p in processes}
     db["start_times"] = {
         k: v for k, v in db["start_times"].items()
-        if tuple(k.split("_", 1)) in processes
+        if k in valid_start_keys
     }
     save_db(db)
     logger.info("Cleanup removed %d stale entries", len(dead_keys))
@@ -1048,10 +1065,17 @@ def api_terminal():
     extract_dir = Config.UPLOAD_DIR / session["username"] / project / "extracted"
     if not extract_dir.exists():
         return jsonify({"status": "error", "output": "Project not found"}), 404
-    blocked = ["rm -rf /", "rm -rf ~", "mkfs", "dd if=", ":(){", "wget", "curl"]
-    for b in blocked:
-        if b in command.lower():
-            return jsonify({"status": "error", "output": f"Blocked: {b}"}), 403
+    blocked_patterns = [
+        r'\brm\s+-[rR]', r'\bmkfs\b', r'\bdd\b', r'\bwget\b', r'\bcurl\b',
+        r':\(\)\s*\{', r'\bsudo\b', r'\bsu\b', r'\bchmod\b', r'\bchown\b',
+        r'\bpython\s+-[cce]', r'\bnode\s+-e\b', r'\bsh\s+-c\b',
+        r'\bbash\s+-c\b', r'\bkill\b', r'\bpasswd\b',
+        r'>\s*/dev/', r'\bexport\b',
+    ]
+    cmd_lower = command.lower()
+    for p in blocked_patterns:
+        if re.search(p, cmd_lower):
+            return jsonify({"status": "error", "output": "Blocked command"}), 403
     try:
         res = subprocess.run(
             ["sh", "-c", command],
