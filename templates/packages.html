@@ -26,6 +26,16 @@
     .pkg-tab.active{background:#1F2937;color:#F9FAFB}
     .pkg-tab:hover:not(.active){color:#9CA3AF}
     .pkg-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px}
+    .custom-install{display:flex;gap:8px;align-items:center;padding:12px 16px;background:linear-gradient(135deg,rgba(0,212,255,0.06),rgba(139,92,246,0.06));border:1px solid rgba(0,212,255,0.15);border-radius:12px;margin-bottom:8px}
+    .custom-install input{flex:1;background:#0B0E14;border:1px solid #1F2937;border-radius:8px;padding:10px 14px;color:#F9FAFB;font-size:14px;outline:none;font-family:monospace}
+    .custom-install input:focus{border-color:#00D4FF;box-shadow:0 0 0 3px rgba(0,212,255,0.1)}
+    .custom-install input::placeholder{color:#4B5563}
+    .custom-install-btn{padding:10px 20px;border-radius:8px;background:var(--gradient);border:none;color:#0B0E14;font-weight:600;font-size:13px;cursor:pointer;transition:all 0.2s;white-space:nowrap}
+    .custom-install-btn:hover{box-shadow:0 4px 15px rgba(0,212,255,0.4)}
+    .no-match-box{text-align:center;padding:30px 20px;color:#6B7280;border:1px dashed #1F2937;border-radius:12px}
+    .no-match-box .install-term{color:#00D4FF;font-weight:600;cursor:pointer;transition:0.2s}
+    .no-match-box .install-term:hover{color:#F9FAFB;text-decoration:underline}
+    .pkg-more{text-align:center;padding:8px;color:#4B5563;font-size:11px;border-top:1px solid #1F2937}
     .pkg-card{background:#111827;border:1px solid #1F2937;border-radius:12px;padding:14px 16px;transition:all 0.2s}
     .pkg-card:hover{border-color:rgba(0,212,255,0.2);transform:translateY(-2px);box-shadow:0 8px 25px rgba(0,0,0,0.3)}
     .pkg-card-name{font-weight:600;color:#F9FAFB;font-size:14px;margin-bottom:4px;display:flex;align-items:center;gap:8px}
@@ -82,9 +92,14 @@
         </div>
       </div>
       <div class="pkg-body">
+        <div class="custom-install">
+          <i class="fa-solid fa-terminal" style="color:#00D4FF;font-size:14px"></i>
+          <input type="text" id="customPkgInput" placeholder="Type any package name (e.g. django, numpy, npm:lodash) and hit Enter..." onkeydown="if(event.key==='Enter')installCustom()" />
+          <button class="custom-install-btn" onclick="installCustom()"><i class="fa-solid fa-download"></i> Install</button>
+        </div>
         <div class="pkg-search">
           <i class="fa-solid fa-search"></i>
-          <input type="text" id="pkgSearch" placeholder="Search packages..." oninput="searchPackages()" />
+          <input type="text" id="pkgSearch" placeholder="Search popular packages..." oninput="searchPackages()" />
         </div>
         <div class="pkg-section-title">
           <span>Available Packages</span>
@@ -140,7 +155,29 @@
         {name:'django',version:'5.2.1',desc:'High-level Python web framework.'},
         {name:'fastapi',version:'0.115.12',desc:'Modern fast web framework.'},
         {name:'pandas',version:'2.2.3',desc:'Data analysis library.'},
-        {name:'matplotlib',version:'3.10.1',desc:'Plotting library.'}
+        {name:'matplotlib',version:'3.10.1',desc:'Plotting library.'},
+        {name:'scipy',version:'1.15.2',desc:'Scientific computing toolkit.'},
+        {name:'beautifulsoup4',version:'4.13.3',desc:'HTML/XML scraper.'},
+        {name:'selenium',version:'4.30.0',desc:'Browser automation.'},
+        {name:'asyncpg',version:'0.30.0',desc:'Async Postgres driver.'},
+        {name:'redis',version:'5.2.1',desc:'Redis client.'},
+        {name:'celery',version:'5.4.0',desc:'Distributed task queue.'},
+        {name:'docker',version:'7.1.0',desc:'Docker SDK for Python.'},
+        {name:'gunicorn',version:'23.0.0',desc:'WSGI HTTP server.'},
+        {name:'uvicorn',version:'0.34.0',desc:'ASGI server.'},
+        {name:'pydantic',version:'2.11.1',desc:'Data validation.'},
+        {name:'jinja2',version:'3.1.6',desc:'Template engine.'},
+        {name:'psutil',version:'7.0.0',desc:'System monitoring.'},
+        {name:'python-telegram-bot',version:'21.10',desc:'Telegram Bot framework.'},
+        {name:'aiogram',version:'3.18.0',desc:'Async Telegram framework.'},
+        {name:'telethon',version:'1.39.0',desc:'Telegram MTProto client.'},
+        {name:'pyrogram',version:'2.0.448',desc:'Telegram MTProto framework.'},
+        {name:'httpx',version:'0.28.1',desc:'Async HTTP client.'},
+        {name:'websockets',version:'15.0.1',desc:'WebSocket server/client.'},
+        {name:'motor',version:'3.7.0',desc:'Async MongoDB driver.'},
+        {name:'scikit-learn',version:'1.6.1',desc:'Machine learning.'},
+        {name:'opencv-python',version:'4.11.0',desc:'Computer vision.'},
+        {name:'plotly',version:'6.0.1',desc:'Interactive plotting.'}
       ],
       npm: [
         {name:'express',version:'5.1.0',desc:'Fast unopinionated web framework.'},
@@ -152,7 +189,28 @@
         {name:'typescript',version:'5.8.3',desc:'Typed JavaScript.'},
         {name:'prisma',version:'6.5.0',desc:'Next-gen ORM.'},
         {name:'socket.io',version:'4.8.1',desc:'Real-time bidirectional communication.'},
-        {name:'next-auth',version:'4.24.11',desc:'Authentication for Next.js.'}
+        {name:'next-auth',version:'4.24.11',desc:'Authentication for Next.js.'},
+        {name:'discord.js',version:'14.18.0',desc:'Discord bot framework.'},
+        {name:'telegraf',version:'4.16.3',desc:'Telegram bot framework.'},
+        {name:'node-telegram-bot-api',version:'0.66.0',desc:'Telegram Bot API client.'},
+        {name:'grammy',version:'1.34.0',desc:'Telegram bot framework.'},
+        {name:'ws',version:'8.18.1',desc:'WebSocket client/server.'},
+        {name:'redis',version:'4.7.0',desc:'Redis client for Node.'},
+        {name:'mongoose',version:'8.13.0',desc:'MongoDB ODM.'},
+        {name:'pg',version:'8.13.3',desc:'Postgres client.'},
+        {name:'dotenv',version:'16.4.7',desc:'Environment loader.'},
+        {name:'jsonwebtoken',version:'9.0.2',desc:'JWT implementation.'},
+        {name:'bcrypt',version:'5.1.1',desc:'Password hashing.'},
+        {name:'cors',version:'2.8.5',desc:'CORS middleware.'},
+        {name:'helmet',version:'8.0.0',desc:'Security middleware.'},
+        {name:'morgan',version:'1.10.0',desc:'HTTP logger.'},
+        {name:'nodemon',version:'3.1.9',desc:'Dev auto-restart.'},
+        {name:'pm2',version:'5.4.3',desc:'Process manager.'},
+        {name:'cheerio',version:'1.0.0',desc:'HTML parser.'},
+        {name:'puppeteer',version:'24.6.0',desc:'Browser automation.'},
+        {name:'sharp',version:'0.34.1',desc:'Image processing.'},
+        {name:'winston',version:'3.17.0',desc:'Logging library.'},
+        {name:'zod',version:'3.24.3',desc:'Schema validation.'}
       ]
     };
     pkgData[manager] = pkgLists[manager] || [];
@@ -169,6 +227,16 @@
     }
     const search = document.getElementById('pkgSearch').value.toLowerCase();
     const filtered = data.filter(function(p) { return p.name.toLowerCase().includes(search); });
+    if (!filtered.length && search.length > 1) {
+      const prefix = manager === 'pip' ? '' : 'npm:';
+      grid.innerHTML = '<div class="no-match-box">' +
+        '<i class="fa-solid fa-search" style="font-size:28px;opacity:0.4;margin-bottom:8px;display:block"></i>' +
+        '<p style="margin-bottom:8px">No curated package matches <strong>"' + search + '"</strong></p>' +
+        '<span class="install-term" onclick="installCustom(\'' + prefix + search + '\')">' +
+        '<i class="fa-solid fa-download"></i> Install "' + search + '" as custom package</span>' +
+        '</div>';
+      return;
+    }
     if (!filtered.length) {
       grid.innerHTML = '<div class="empty-state"><i class="fa-solid fa-search"></i><span>No matching packages</span></div>';
       return;
@@ -192,6 +260,41 @@
 
   function searchPackages() {
     renderPackages(pkgManager);
+  }
+
+  function installCustom(pkg) {
+    var input = document.getElementById('customPkgInput');
+    var name = pkg || input.value.trim();
+    if (!name) { showToast('Enter a package name', 'error'); return; }
+    input.value = '';
+    var manager = name.startsWith('npm:') ? 'npm' : 'pip';
+    var pkgName = name.replace(/^npm:/, '').replace(/^pip:/, '');
+    if (queue.some(function(q) { return q.manager === manager && q.name === pkgName; })) return;
+    const item = {id: Date.now(), manager: manager, name: pkgName, status: 'pending', progress: 0};
+    queue.push(item);
+    updateQueue();
+    fetch('/api/install-package', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({project: PROJECT, package_name: name})
+    }).then(function(r) { return r.json(); }).then(function(d) {
+      item.status = d.status === 'success' ? 'success' : 'error';
+      item.progress = 100;
+      if (d.status === 'success') installed[manager + ':' + pkgName] = true;
+      updateQueue();
+      renderPackages(pkgManager);
+      showToast(d.status === 'success' ? 'Installed ' + pkgName + '!' : 'Failed: ' + (d.error || 'Unknown'), d.status === 'success' ? 'success' : 'error');
+    }).catch(function(e) {
+      item.status = 'error';
+      item.progress = 100;
+      updateQueue();
+      showToast('Network error: ' + e.message, 'error');
+    });
+    var interval = setInterval(function() {
+      if (item.status !== 'pending') { clearInterval(interval); return; }
+      item.progress = Math.min(item.progress + Math.random() * 15, 90);
+      updateQueue();
+    }, 500);
   }
 
   function switchManager(el) {
