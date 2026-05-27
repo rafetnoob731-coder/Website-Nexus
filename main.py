@@ -437,6 +437,10 @@ def admin_cleanup():
         k: v for k, v in db["start_times"].items()
         if k in valid_start_keys
     }
+    db["process_pids"] = {
+        k: v for k, v in db.get("process_pids", {}).items()
+        if k in valid_start_keys
+    }
     save_db(db)
     logger.info("Cleanup removed %d stale entries", len(dead_keys))
     return redirect(url_for("admin_panel"))
@@ -570,18 +574,30 @@ def index():
     user_dir.mkdir(exist_ok=True)
 
     apps = []
+    db = load_db()
     for entry in sorted(user_dir.iterdir()):
         if entry.is_dir():
             p = processes.get((username, entry.name))
             running = p is not None and p.poll() is None
             if not running:
-                pid = load_db().get("process_pids", {}).get(f"{username}_{entry.name}")
+                pid = db.get("process_pids", {}).get(f"{username}_{entry.name}")
                 if pid and _is_pid_alive(pid):
                     running = True
             apps.append({
                 "name": entry.name,
                 "running": running
             })
+
+    # Auto-restart projects that were running but died (Render spin-down recovery)
+    for app in apps:
+        if not app["running"]:
+            db_key = f"{username}_{app['name']}"
+            if db.get("process_pids", {}).get(db_key) or db.get("start_times", {}).get(db_key):
+                try:
+                    _start_project(username, app["name"])
+                    app["running"] = True
+                except Exception:
+                    pass
 
     disk_bytes = sum(f.stat().st_size for f in user_dir.rglob("*") if f.is_file())
     db = load_db()
@@ -872,41 +888,53 @@ def _stop_process(key: tuple[str, str]) -> None:
 @app.route("/run/<project>")
 @login_required
 def run_project(project: str):
-    username    = session["username"]
-    project     = sanitize_filename(project)
-    user_dir    = Config.UPLOAD_DIR / username
-    app_dir     = user_dir / project
-    extract_dir = app_dir / "extracted"
+    username = session["username"]
+    project  = sanitize_filename(project)
+    user_dir = Config.UPLOAD_DIR / username
+    app_dir  = user_dir / project
 
     if not is_safe_path(user_dir, app_dir):
         return redirect(url_for("index"))
 
-    log_path = app_dir / "logs.txt"
-    key      = (username, project)
+    key = (username, project)
 
     # Close existing log handle
     if key in file_handles:
         with suppress(Exception):
             file_handles[key].close()
 
-    # If already running do nothing
+    # If already running do nothing (check in-memory + DB PID)
     if key in processes and processes[key].poll() is None:
         return redirect(url_for("index"))
-    # Also check via DB PID (cross-worker)
     db = load_db()
     pid_check = db.get("process_pids", {}).get(f"{username}_{project}")
     if pid_check and _is_pid_alive(pid_check):
         return redirect(url_for("index"))
+
+    _start_project(username, project)
+    return redirect(url_for("index"))
+
+
+def _start_project(username: str, project: str) -> bool:
+    """Start a project as a background process. Returns True on success."""
+    project     = sanitize_filename(project)
+    user_dir    = Config.UPLOAD_DIR / username
+    app_dir     = user_dir / project
+    extract_dir = app_dir / "extracted"
+    log_path    = app_dir / "logs.txt"
+    key         = (username, project)
+
+    if not is_safe_path(user_dir, app_dir):
+        return False
 
     if not extract_dir.exists():
         log_path.write_text(
             f"[PANEL ERROR] Extracted directory does not exist: {extract_dir}\n",
             encoding="utf-8"
         )
-        return redirect(url_for("index"))
+        return False
 
     available = [f.name for f in extract_dir.iterdir() if f.is_file()]
-    # Prioritised main file lookup
     main_file = next(
         (f for f in ["main.py", "app.py", "bot.py", "index.js", "server.js", "main.js"]
          if f in available),
@@ -919,7 +947,7 @@ def run_project(project: str):
             f"Available: {available}\n",
             encoding="utf-8"
         )
-        return redirect(url_for("index"))
+        return False
 
     try:
         log_fh = log_path.open("w", encoding="utf-8")
@@ -952,12 +980,12 @@ def run_project(project: str):
         save_db(db)
 
         logger.info("Project %s/%s started (PID=%d)", username, project, processes[key].pid)
+        return True
 
     except Exception as exc:
         log_path.write_text(f"[PANEL ERROR] {exc}\n", encoding="utf-8")
         logger.exception("Start failed %s/%s", username, project)
-
-    return redirect(url_for("index"))
+        return False
 
 
 @app.route("/stop/<project>")
@@ -968,6 +996,7 @@ def stop_project(project: str):
 
     db = load_db()
     db["start_times"].pop(f"{session['username']}_{project}", None)
+    db.get("process_pids", {}).pop(f"{session['username']}_{project}", None)
     save_db(db)
     logger.info("Project %s/%s stopped", session["username"], project)
     return redirect(url_for("index"))
@@ -995,6 +1024,7 @@ def delete_project(project: str):
 
     db = load_db()
     db["start_times"].pop(f"{username}_{project}", None)
+    db.get("process_pids", {}).pop(f"{username}_{project}", None)
     save_db(db)
     return redirect(url_for("index"))
 
