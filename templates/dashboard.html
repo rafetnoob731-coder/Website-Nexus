@@ -97,8 +97,8 @@
         <a href="/restart/{{ app.name }}" class="btn btn-sm btn-ghost" style="border-color:rgba(245,158,11,0.2);color:var(--warning)"><i class="fa-solid fa-rotate"></i> Restart</a>
         <a href="/files/{{ app.name }}" class="btn btn-sm btn-ghost"><i class="fa-solid fa-code"></i> Files</a>
         <a href="#" class="btn btn-sm btn-ghost" onclick="openLog('{{ app.name }}');return false"><i class="fa-regular fa-file-lines"></i> Logs</a>
-        <a href="#" class="btn btn-sm btn-ghost" onclick="openPkg('{{ app.name }}');return false"><i class="fa-solid fa-box"></i> Pkg</a>
-        <a href="#" class="btn btn-sm btn-ghost" onclick="openTerm('{{ app.name }}');return false"><i class="fa-solid fa-terminal"></i> Term</a>
+        <a href="/packages/{{ app.name }}" class="btn btn-sm btn-ghost"><i class="fa-solid fa-box"></i> Pkg</a>
+        <a href="/terminal/{{ app.name }}" class="btn btn-sm btn-ghost"><i class="fa-solid fa-terminal"></i> Term</a>
         <a href="/download/{{ app.name }}" class="btn btn-sm btn-ghost" style="border-color:rgba(139,92,246,0.2);color:var(--accent-purple)"><i class="fa-solid fa-download"></i> ZIP</a>
         <a href="/delete/{{ app.name }}" class="btn btn-sm btn-ghost" style="border-color:rgba(239,68,68,0.2);color:var(--danger)" onclick="return confirm('Delete this project permanently?')"><i class="fa-solid fa-trash-can"></i> Delete</a>
       </div>

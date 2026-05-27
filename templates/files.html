@@ -3,117 +3,116 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>{{ project }} — File Manager | VIP DARK GOD</title>
+  <title>{{ project }} — Archive | NEXUS</title>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
   <link rel="stylesheet" href="/static/nexus.css" />
   <style>
-    html, body { height: 100%; overflow: hidden; }
+    html,body{height:100%;overflow:hidden;background:#0B0E14}
 
-    /* Sidebar custom overrides */
-    .sidebar-files {
-      position: fixed; top: 0; left: 0; bottom: 0; z-index: 50;
-      width: 260px; min-width: 260px;
-      background: var(--bg-primary);
-      border-right: 1px solid var(--border);
-      display: flex; flex-direction: column;
-      padding-top: 52px;
-    }
-    .sidebar-files .file-tree { flex: 1; overflow-y: auto; padding: 6px 0; }
-    .sidebar-files .sidebar-header {
-      padding: 10px 14px; border-bottom: 1px solid var(--border);
-      font-size: 11px; font-weight: 700; color: var(--text-muted);
-      text-transform: uppercase; letter-spacing: 0.5px;
-      display: flex; align-items: center; justify-content: space-between;
-    }
+    /* Sidebar */
+    .sidebar-files{position:fixed;top:0;left:0;bottom:0;z-index:50;width:280px;min-width:280px;background:rgba(11,14,20,0.95);border-right:1px solid #1F2937;display:flex;flex-direction:column;backdrop-filter:blur(20px)}
+    .sidebar-files .sidebar-header{padding:16px 18px;border-bottom:1px solid #1F2937;font-size:11px;font-weight:700;color:#6B7280;text-transform:uppercase;letter-spacing:0.5px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
+    .sidebar-files .sidebar-header .actions{display:flex;gap:4px}
+    .sidebar-files .sidebar-header .actions button{width:28px;height:28px;border-radius:8px;border:none;background:transparent;color:#6B7280;cursor:pointer;font-size:12px;transition:all 0.2s;display:flex;align-items:center;justify-content:center}
+    .sidebar-files .sidebar-header .actions button:hover{background:rgba(0,212,255,0.1);color:#00D4FF}
+    .sidebar-files .file-tree{flex:1;overflow-y:auto;padding:8px 0}
+    .sidebar-files .file-tree::-webkit-scrollbar{width:4px}
+    .sidebar-files .file-tree::-webkit-scrollbar-thumb{background:#1F2937;border-radius:4px}
+
+    /* Tree items with metadata */
+    .tree-folder,.tree-item{padding:6px 14px 6px 10px;display:flex;align-items:center;gap:8px;cursor:pointer;transition:all 0.15s;border-left:3px solid transparent;position:relative}
+    .tree-folder:hover{background:rgba(255,255,255,0.03)}
+    .tree-item:hover{background:rgba(0,212,255,0.04)}
+    .tree-item.active{background:rgba(0,212,255,0.08);border-left-color:#00D4FF}
+    .tree-item .name{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1;font-size:13px;color:#E5E7EB}
+    .tree-item .file-meta{font-size:10px;color:#4B5563;flex-shrink:0;display:flex;gap:8px;align-items:center;opacity:0;transition:opacity 0.2s}
+    .tree-item:hover .file-meta{opacity:1}
+    .tree-folder .name{font-size:13px;color:#D1D5DB;font-weight:500}
+    .tree-children{padding-left:12px}
+    .folder-arrow{font-size:10px;width:14px;transition:0.2s;color:#6B7280;flex-shrink:0}
+    .folder-arrow.open{transform:rotate(90deg)}
 
     /* Topbar */
-    .topbar-files {
-      position: fixed; top: 0; left: 260px; right: 0; z-index: 90;
-      height: 52px;
-      display: flex; align-items: center; justify-content: space-between;
-      padding: 0 16px;
-      background: rgba(11,14,20,0.85);
-      backdrop-filter: blur(20px);
-      border-bottom: 1px solid var(--border);
-    }
-    .topbar-files .file-path {
-      font-size: 12px; color: var(--text-muted); font-family: var(--font-mono);
-      background: rgba(255,255,255,0.03); padding: 4px 10px; border-radius: 6px;
-      max-width: 260px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
-    }
+    .topbar-files{position:fixed;top:0;left:280px;right:0;z-index:90;height:56px;display:flex;align-items:center;justify-content:space-between;padding:0 20px;background:rgba(11,14,20,0.85);backdrop-filter:blur(20px);border-bottom:1px solid #1F2937}
+    .topbar-left{display:flex;align-items:center;gap:12px}
+    .topbar-left .project-name{font-size:15px;font-weight:600;color:#F9FAFB;display:flex;align-items:center;gap:8px}
+    .topbar-left .project-name small{font-weight:400;font-size:11px;color:#6B7280}
+    .topbar-right{display:flex;align-items:center;gap:8px}
+    .file-path-breadcrumb{font-size:12px;color:#6B7280;font-family:'JetBrains Mono',monospace;background:rgba(255,255,255,0.03);padding:5px 12px;border-radius:8px;max-width:320px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;display:flex;align-items:center;gap:6px}
+    .file-path-breadcrumb span{color:#9CA3AF}
+    .file-path-breadcrumb .sep{color:#4B5563}
 
-    /* Main editor area */
-    .editor-container {
-      margin-left: 260px; padding-top: 52px;
-      display: flex; flex-direction: column; height: 100vh;
-    }
-    .editor-tabs {
-      display: flex; align-items: center; height: 36px;
-      background: rgba(255,255,255,0.02); border-bottom: 1px solid var(--border);
-      padding: 0 8px; overflow-x: auto; gap: 2px; flex-shrink: 0;
-    }
-    .editor-body {
-      flex: 1; display: flex; overflow: hidden;
-    }
-    .editor-empty {
-      flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center;
-      color: var(--text-muted); gap: 10px;
-    }
-    .editor-empty i { font-size: 48px; opacity: 0.2; }
-    .editor-empty p { font-size: 14px; opacity: 0.6; }
+    /* Toolbar buttons */
+    .toolbar-btn{display:flex;align-items:center;gap:6px;padding:7px 14px;border-radius:8px;font-size:12px;font-weight:600;border:1px solid #1F2937;background:transparent;color:#9CA3AF;cursor:pointer;transition:all 0.2s}
+    .toolbar-btn:hover{background:rgba(255,255,255,0.04);color:#F9FAFB;border-color:#374151}
+    .toolbar-btn.primary{background:var(--gradient);border:none;color:#0B0E14}
+    .toolbar-btn.primary:hover{box-shadow:0 4px 15px rgba(0,212,255,0.3)}
+    .toolbar-btn.danger:hover{background:rgba(239,68,68,0.15);color:#FB7185;border-color:rgba(239,68,68,0.3)}
+    .toolbar-btn.success:hover{background:rgba(16,185,129,0.15);color:#4ADE80;border-color:rgba(16,185,129,0.3)}
 
-    /* Keep existing tree/tab/item styles from nexus.css but override key ones */
-    .sidebar-files .tree-item { padding: 6px 14px; }
-    .sidebar-files .tree-item .name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-    .sidebar-files .tree-children { padding-left: 16px; }
-    .sidebar-files .folder-arrow { font-size: 10px; width: 14px; transition: 0.2s; }
-    .sidebar-files .folder-arrow.open { transform: rotate(90deg); }
+    /* Editor container */
+    .editor-container{margin-left:280px;padding-top:56px;display:flex;flex-direction:column;height:100vh}
+    .editor-tabs{display:flex;align-items:center;height:38px;background:rgba(255,255,255,0.015);border-bottom:1px solid #1F2937;padding:0 12px;overflow-x:auto;gap:2px;flex-shrink:0}
+    .editor-tabs::-webkit-scrollbar{height:2px}
+    .editor-tabs::-webkit-scrollbar-thumb{background:#1F2937;border-radius:2px}
+    .editor-body{flex:1;display:flex;overflow:hidden}
+    .editor-gutter{width:48px;flex-shrink:0;background:rgba(255,255,255,0.015);border-right:1px solid #1F2937;padding:12px 0;text-align:right;font-family:'JetBrains Mono',monospace;font-size:12px;line-height:1.7;color:#374151;overflow:hidden;user-select:none}
+    .editor-gutter div{padding-right:14px}
+    .editor-textarea-wrap{flex:1;position:relative;overflow:auto}
+    .editor-textarea-wrap::-webkit-scrollbar{width:10px;height:10px}
+    .editor-textarea-wrap::-webkit-scrollbar-track{background:transparent}
+    .editor-textarea-wrap::-webkit-scrollbar-thumb{background:#1F2937;border-radius:5px}
+    .editor-textarea-wrap::-webkit-scrollbar-thumb:hover{background:#374151}
+    #editorTextarea{width:100%;min-height:100%;padding:12px 18px;border:none;outline:none;resize:none;background:transparent;color:#E2E8F0;font-family:'JetBrains Mono',monospace;font-size:13px;line-height:1.7;tab-size:2;white-space:pre;overflow-wrap:normal}
 
-    .editor-tabs::-webkit-scrollbar { height: 2px; }
-    .editor-tabs::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+    /* Empty state */
+    .editor-empty{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;color:#6B7280;gap:12px}
+    .editor-empty i{font-size:56px;opacity:0.15}
+    .editor-empty p{font-size:14px;opacity:0.6}
 
-    /* Gutter */
-    .editor-gutter {
-      width: 44px; flex-shrink: 0;
-      background: rgba(255,255,255,0.01);
-      border-right: 1px solid var(--border);
-      padding: 10px 0; text-align: right;
-      font-family: var(--font-mono); font-size: 12px;
-      line-height: 1.6; color: #484f58; overflow: hidden;
-      user-select: none;
-    }
-    .editor-gutter div { padding-right: 12px; }
+    /* Tabs */
+    .tab-item{display:flex;align-items:center;gap:8px;padding:6px 14px;font-size:12px;color:#6B7280;border-radius:6px 6px 0 0;cursor:pointer;transition:all 0.15s;border-bottom:2px solid transparent;white-space:nowrap;user-select:none}
+    .tab-item:hover{color:#D1D5DB;background:rgba(255,255,255,0.02)}
+    .tab-item.active{color:#F9FAFB;background:rgba(0,212,255,0.04);border-bottom-color:#00D4FF}
+    .tab-item .close-tab{display:flex;align-items:center;justify-content:center;width:18px;height:18px;border-radius:4px;font-size:11px;opacity:0;transition:all 0.15s;color:#6B7280}
+    .tab-item:hover .close-tab{opacity:1}
+    .tab-item .close-tab:hover{background:rgba(239,68,68,0.2);color:#FB7185}
+    .tab-item .file-icon{font-size:12px;flex-shrink:0}
 
-    .editor-textarea-wrap {
-      flex: 1; position: relative; overflow: auto;
-    }
-    #editorTextarea {
-      width: 100%; min-height: 100%;
-      padding: 10px 16px; border: none; outline: none; resize: none;
-      background: transparent; color: #e2e8f0;
-      font-family: var(--font-mono); font-size: 13px;
-      line-height: 1.6; tab-size: 2;
-      white-space: pre; overflow-wrap: normal;
-    }
+    /* Status bar */
+    .status-bar{height:28px;background:#0E121A;border-top:1px solid #1F2937;display:flex;align-items:center;justify-content:space-between;padding:0 16px;font-size:11px;color:#4B5563;flex-shrink:0}
+    .status-bar .left,.status-bar .right{display:flex;align-items:center;gap:14px}
+    .status-bar .sep{color:#1F2937}
 
-    @media (max-width: 768px) {
-      .sidebar-files { width: 48px; min-width: 48px; }
-      .sidebar-files .tree-item .name { display: none; }
-      .sidebar-files .tree-children { padding-left: 0; }
-      .sidebar-files .tree-item .folder-arrow { display: none; }
-      .sidebar-files .sidebar-header span { display: none; }
-      .topbar-files { left: 48px; }
-      .topbar-files .file-path { display: none; }
-      .editor-container { margin-left: 48px; }
+    /* Upload zone */
+    .upload-zone{border:2px dashed #1F2937;border-radius:12px;padding:20px;margin:12px;text-align:center;color:#6B7280;transition:all 0.3s;cursor:pointer}
+    .upload-zone:hover{border-color:rgba(0,212,255,0.3);background:rgba(0,212,255,0.03)}
+    .upload-zone.dragover{border-color:#00D4FF;background:rgba(0,212,255,0.06);box-shadow:0 0 30px rgba(0,212,255,0.1)}
+    .upload-zone i{font-size:24px;opacity:0.4;margin-bottom:6px;display:block}
+    .upload-zone span{font-size:12px}
+
+    /* Responsive */
+    @media(max-width:768px){
+      .sidebar-files{width:200px;min-width:200px}
+      .topbar-files{left:200px}
+      .editor-container{margin-left:200px}
+      .sidebar-files .tree-item .file-meta{display:none}
     }
-    @media (max-width: 480px) {
-      .sidebar-files { width: 40px; min-width: 40px; }
-      .topbar-files { left: 40px; padding: 0 8px; }
-      .topbar-files .btn { padding: 6px 8px; font-size: 11px; }
-      .editor-container { margin-left: 40px; }
-      .editor-gutter { width: 28px; font-size: 10px; }
-      #editorTextarea { font-size: 11px; padding: 8px 8px; }
-      .tab-item { padding: 4px 8px; font-size: 11px; }
+    @media(max-width:480px){
+      .sidebar-files{width:48px;min-width:48px}
+      .sidebar-files .tree-item .name{display:none}
+      .sidebar-files .tree-children{padding-left:0}
+      .sidebar-files .tree-item .folder-arrow{display:none}
+      .sidebar-files .sidebar-header span{display:none}
+      .topbar-files{left:48px;padding:0 10px}
+      .topbar-files .file-path-breadcrumb{display:none}
+      .editor-container{margin-left:48px}
+      .editor-gutter{width:32px;font-size:10px}
+      .editor-gutter div{padding-right:8px}
+      #editorTextarea{font-size:11px;padding:8px 12px}
+      .tab-item{padding:4px 10px;font-size:11px}
+      .status-bar .right{display:none}
+      .toolbar-btn span{display:none}
     }
   </style>
 </head>
@@ -122,33 +121,47 @@
 <!-- Top Bar -->
 <div class="topbar-files">
   <div class="topbar-left">
-    <a href="/" style="color:var(--text-secondary);font-size:18px;margin-right:8px;transition:var(--transition);text-decoration:none"><i class="fa-solid fa-arrow-left"></i></a>
-    <div>
-      <strong style="font-size:14px"><i class="fa-solid fa-folder-open" style="color:var(--accent);margin-right:6px"></i>{{ project }}</strong>
-      <span style="font-size:10px;color:var(--text-muted);display:block">{{ username }} / {{ project }}</span>
+    <a href="/" style="color:#6B7280;font-size:16px;transition:color 0.2s;display:flex;text-decoration:none"><i class="fa-solid fa-arrow-left"></i></a>
+    <div class="project-name">
+      <i class="fa-solid fa-folder-open" style="color:#00D4FF"></i>
+      {{ project }}
+      <small>{{ username }} / {{ project }}</small>
     </div>
   </div>
   <div class="topbar-right">
-    <span class="file-path" id="filePathDisplay">No file selected</span>
-    <button class="btn btn-sm btn-ghost" onclick="showCreateModal()" style="border-color:rgba(16,185,129,0.2);color:var(--success)"><i class="fa-solid fa-plus"></i> New</button>
-    <button class="btn btn-sm btn-ghost" onclick="deleteCurrentFile()" style="border-color:rgba(239,68,68,0.2);color:var(--danger)"><i class="fa-solid fa-trash-can"></i> Delete</button>
-    <button class="btn btn-sm btn-primary" id="saveBtn" onclick="saveFile()" disabled><i class="fa-solid fa-floppy-disk"></i> Save</button>
+    <div class="file-path-breadcrumb" id="filePathDisplay">
+      <i class="fa-solid fa-file" style="font-size:10px"></i>
+      <span id="breadcrumbText">No file selected</span>
+    </div>
+    <button class="toolbar-btn success" onclick="showCreateModal()"><i class="fa-solid fa-plus"></i><span>New</span></button>
+    <button class="toolbar-btn danger" onclick="deleteCurrentFile()"><i class="fa-solid fa-trash-can"></i><span>Delete</span></button>
+    <button class="toolbar-btn primary" id="saveBtn" onclick="saveFile()" disabled><i class="fa-solid fa-floppy-disk"></i><span>Save</span></button>
   </div>
 </div>
 
-<!-- Layout -->
+<!-- Sidebar -->
 <div class="sidebar-files">
   <div class="sidebar-header">
-    <span>Files</span>
-    <button style="width:26px;height:26px;border-radius:6px;border:none;background:transparent;color:var(--text-muted);cursor:pointer;font-size:12px;transition:var(--transition)" onclick="showCreateModal()" title="New file/folder"><i class="fa-solid fa-plus"></i></button>
+    <span><i class="fa-solid fa-list" style="margin-right:6px"></i> Files</span>
+    <div class="actions">
+      <button onclick="showCreateModal()" title="New file"><i class="fa-solid fa-plus"></i></button>
+      <button onclick="location.reload()" title="Refresh"><i class="fa-solid fa-rotate"></i></button>
+    </div>
   </div>
   <div class="file-tree" id="fileTree">
-    <div style="text-align:center;padding:20px;color:var(--text-muted);font-size:13px">
+    <div style="text-align:center;padding:20px;color:#6B7280;font-size:13px">
       <i class="fa-solid fa-spinner fa-spin"></i> Loading...
     </div>
   </div>
 </div>
 
+<!-- Upload Zone -->
+<div class="upload-zone" id="uploadZone">
+  <i class="fa-solid fa-cloud-arrow-up"></i>
+  <span>Drop a <strong>.zip</strong> file to upload &amp; extract</span>
+</div>
+
+<!-- Editor -->
 <div class="editor-container">
   <div class="editor-tabs" id="editorTabs"></div>
   <div class="editor-body">
@@ -159,6 +172,16 @@
         <p>Select a file from the tree to start editing</p>
       </div>
       <textarea id="editorTextarea" style="display:none" spellcheck="false"></textarea>
+    </div>
+  </div>
+  <div class="status-bar">
+    <div class="left">
+      <span id="statusLines">Ln 0</span>
+      <span class="sep">|</span>
+      <span id="statusChars">UTF-8</span>
+    </div>
+    <div class="right">
+      <span id="statusPath" style="color:#6B7280">Ready</span>
     </div>
   </div>
 </div>
@@ -189,12 +212,13 @@
   let fileTreeData = [];
   let currentDir = '';
 
-  function toast(msg, type = 'info') {
+  function toast(msg, type) {
+    type = type || 'info';
     const el = document.createElement('div');
     el.className = 'toast ' + type;
     el.textContent = msg;
     document.getElementById('toastContainer').appendChild(el);
-    setTimeout(() => { el.style.opacity = '0'; el.style.transition = '0.3s'; setTimeout(() => el.remove(), 300); }, 3000);
+    setTimeout(function() { el.style.opacity = '0'; el.style.transition = '0.3s'; setTimeout(function() { el.remove(); }, 300); }, 3000);
   }
 
   function showCreateModal() {
@@ -203,12 +227,46 @@
     document.getElementById('createName').focus();
   }
   function closeCreateModal() { document.getElementById('createModal').classList.remove('active'); }
-  document.getElementById('createModal').addEventListener('click', e => { if (e.target === e.currentTarget) closeCreateModal(); });
-  document.getElementById('createName').addEventListener('keydown', e => { if (e.key === 'Enter') createItem(); if (e.key === 'Escape') closeCreateModal(); });
+  document.getElementById('createModal').addEventListener('click', function(e) { if (e.target === e.currentTarget) closeCreateModal(); });
+  document.getElementById('createName').addEventListener('keydown', function(e) { if (e.key === 'Enter') createItem(); if (e.key === 'Escape') closeCreateModal(); });
+
+  // Upload zone
+  var uploadZone = document.getElementById('uploadZone');
+  if (uploadZone) {
+    uploadZone.addEventListener('dragover', function(e) { e.preventDefault(); uploadZone.classList.add('dragover'); });
+    uploadZone.addEventListener('dragleave', function() { uploadZone.classList.remove('dragover'); });
+    uploadZone.addEventListener('drop', function(e) {
+      e.preventDefault();
+      uploadZone.classList.remove('dragover');
+      var files = e.dataTransfer.files;
+      if (files.length > 0) uploadFile(files[0]);
+    });
+    uploadZone.addEventListener('click', function() {
+      var input = document.createElement('input');
+      input.type = 'file';
+      input.accept = '.zip,.tar.gz,.tar';
+      input.onchange = function(e) { if (e.target.files.length > 0) uploadFile(e.target.files[0]); };
+      input.click();
+    });
+  }
+
+  function uploadFile(file) {
+    var formData = new FormData();
+    formData.append('project', PROJECT);
+    formData.append('file', file);
+    toast('Uploading ' + file.name + '...', 'info');
+    fetch('/api/upload', { method: 'POST', body: formData })
+      .then(function(r) { return r.json(); })
+      .then(function(d) {
+        if (d.status === 'success') { toast('Uploaded & extracted successfully!', 'success'); loadTree(); }
+        else { toast(d.error || 'Upload failed', 'error'); }
+      })
+      .catch(function(e) { toast('Upload failed: ' + e.message, 'error'); });
+  }
 
   async function loadTree() {
     const treeEl = document.getElementById('fileTree');
-    treeEl.innerHTML = '<div style="text-align:center;padding:20px;color:var(--text-muted);font-size:13px"><i class="fa-solid fa-spinner fa-spin"></i> Loading...</div>';
+    treeEl.innerHTML = '<div style="text-align:center;padding:20px;color:#6B7280;font-size:13px"><i class="fa-solid fa-spinner fa-spin"></i> Loading...</div>';
     try {
       const res = await fetch('/api/list-files/' + PROJECT);
       const data = await res.json();
@@ -217,7 +275,7 @@
       fileTreeData = tree;
       treeEl.innerHTML = renderTree(tree, '');
     } catch (e) {
-      treeEl.innerHTML = '<div style="text-align:center;padding:20px;color:var(--danger)">Failed to load files</div>';
+      treeEl.innerHTML = '<div style="text-align:center;padding:20px;color:#FB7185">Failed to load files</div>';
     }
   }
 
@@ -238,12 +296,12 @@
   }
 
   function renderTree(node, basePath) {
-    const entries = Object.entries(node).sort(([a, av], [b, bv]) => {
-      const aIsFolder = av.__type === 'folder';
-      const bIsFolder = bv.__type === 'folder';
+    const entries = Object.entries(node).sort(function(a, b) {
+      const aIsFolder = a[1].__type === 'folder';
+      const bIsFolder = b[1].__type === 'folder';
       if (aIsFolder && !bIsFolder) return -1;
       if (!aIsFolder && bIsFolder) return 1;
-      return a.localeCompare(b);
+      return a[0].localeCompare(b[0]);
     });
     let html = '';
     for (const [name, val] of entries) {
@@ -252,31 +310,33 @@
       if (isFolder) {
         const children = val.__children || {};
         const hasVisible = Object.keys(children).length > 0;
-        html += `<div class="tree-folder">`;
-        html += `<div class="tree-item folder-item" data-path="${path}">`;
-        html += `<span class="folder-arrow ${hasVisible ? '' : 'open'}"><i class="fa-solid fa-chevron-right"></i></span>`;
-        html += `<i class="fa-solid fa-folder" style="color:var(--warning)"></i>`;
-        html += `<span class="name">${name}</span>`;
-        html += `</div>`;
-        html += `<div class="tree-children" style="display:${hasVisible ? 'none' : 'block'}">`;
+        html += '<div class="tree-folder">';
+        html += '<div class="tree-item folder-item" data-path="' + path + '">';
+        html += '<span class="folder-arrow ' + (hasVisible ? '' : 'open') + '"><i class="fa-solid fa-chevron-right"></i></span>';
+        html += '<i class="fa-solid fa-folder" style="color:#FACC15"></i>';
+        html += '<span class="name">' + name + '</span>';
+        html += '<span class="file-meta"><span>' + Object.keys(children).length + ' items</span></span>';
+        html += '</div>';
+        html += '<div class="tree-children" style="display:' + (hasVisible ? 'none' : 'block') + '">';
         html += renderTree(children, path);
-        html += `</div></div>`;
+        html += '</div></div>';
       } else {
-        html += `<div class="tree-item" data-path="${path}">`;
-        html += `<span class="folder-arrow" style="visibility:hidden"><i class="fa-solid fa-chevron-right"></i></span>`;
+        html += '<div class="tree-item" data-path="' + path + '">';
+        html += '<span class="folder-arrow" style="visibility:hidden"><i class="fa-solid fa-chevron-right"></i></span>';
         const ext = name.split('.').pop().toLowerCase();
-        let icon = 'fa-solid fa-file';
-        if (['py'].includes(ext)) icon = 'fa-brands fa-python';
-        else if (['js','ts','jsx','tsx'].includes(ext)) icon = 'fa-brands fa-js';
-        else if (['html','htm'].includes(ext)) icon = 'fa-brands fa-html5';
-        else if (['css','scss','sass','less'].includes(ext)) icon = 'fa-brands fa-css3-alt';
-        else if (['json','xml','yaml','yml','toml'].includes(ext)) icon = 'fa-solid fa-code';
-        else if (['md','txt','log'].includes(ext)) icon = 'fa-regular fa-file-lines';
-        else if (['png','jpg','jpeg','gif','svg','ico'].includes(ext)) icon = 'fa-regular fa-image';
-        else if (['zip','tar','gz','rar','7z'].includes(ext)) icon = 'fa-regular fa-file-zipper';
-        html += `<i class="${icon}" style="color:var(--text-muted)"></i>`;
-        html += `<span class="name">${name}</span>`;
-        html += `</div>`;
+        let icon = 'fa-solid fa-file', iconColor = '#6B7280';
+        if (['py'].indexOf(ext) !== -1) { icon = 'fa-brands fa-python'; iconColor = '#3776AB'; }
+        else if (['js','ts','jsx','tsx'].indexOf(ext) !== -1) { icon = 'fa-brands fa-js'; iconColor = '#F7DF1E'; }
+        else if (['html','htm'].indexOf(ext) !== -1) { icon = 'fa-brands fa-html5'; iconColor = '#E34F26'; }
+        else if (['css','scss','sass','less'].indexOf(ext) !== -1) { icon = 'fa-brands fa-css3-alt'; iconColor = '#1572B6'; }
+        else if (['json','xml','yaml','yml','toml'].indexOf(ext) !== -1) { icon = 'fa-solid fa-code'; iconColor = '#8B5CF6'; }
+        else if (['md','txt','log'].indexOf(ext) !== -1) { icon = 'fa-regular fa-file-lines'; iconColor = '#9CA3AF'; }
+        else if (['png','jpg','jpeg','gif','svg','ico'].indexOf(ext) !== -1) { icon = 'fa-regular fa-image'; iconColor = '#22D3EE'; }
+        else if (['zip','tar','gz','rar','7z'].indexOf(ext) !== -1) { icon = 'fa-regular fa-file-zipper'; iconColor = '#FACC15'; }
+        html += '<i class="' + icon + '" style="color:' + iconColor + '"></i>';
+        html += '<span class="name">' + name + '</span>';
+        html += '<span class="file-meta"><span>' + ext.toUpperCase() + '</span></span>';
+        html += '</div>';
       }
     }
     return html;
@@ -293,10 +353,12 @@
   }
 
   async function openFile(path) {
-    document.querySelectorAll('.tree-item.active').forEach(e => e.classList.remove('active'));
-    document.querySelector(`.tree-item[data-path="${path}"]`)?.classList.add('active');
-    document.getElementById('filePathDisplay').textContent = '/' + path;
+    document.querySelectorAll('.tree-item.active').forEach(function(e) { e.classList.remove('active'); });
+    var el = document.querySelector('.tree-item[data-path="' + path + '"]');
+    if (el) el.classList.add('active');
+    document.getElementById('breadcrumbText').textContent = '/' + path;
     currentDir = path.split('/').slice(0, -1).join('/');
+    document.getElementById('statusPath').textContent = path;
     if (openFiles[path] !== undefined) {
       activeFile = path;
       renderEditor();
@@ -323,12 +385,16 @@
     const container = document.getElementById('editorTabs');
     const paths = Object.keys(openFiles);
     if (paths.length === 0) { container.innerHTML = ''; return; }
-    container.innerHTML = paths.map(p => {
+    container.innerHTML = paths.map(function(p) {
       const name = p.split('/').pop();
-      return `<div class="tab-item ${p === activeFile ? 'active' : ''}" data-tab="${p}">
-        <span>${name}</span>
-        <span class="close-tab" data-close="${p}"><i class="fa-solid fa-xmark"></i></span>
-      </div>`;
+      const ext = name.split('.').pop().toLowerCase();
+      let fileIcon = '', iconClass = 'fa-solid fa-file';
+      if (['py'].indexOf(ext) !== -1) { fileIcon = 'fa-brands fa-python'; } else if (['js','ts','jsx','tsx'].indexOf(ext) !== -1) { fileIcon = 'fa-brands fa-js'; } else if (['html','htm'].indexOf(ext) !== -1) { fileIcon = 'fa-brands fa-html5'; } else if (['css','scss','sass','less'].indexOf(ext) !== -1) { fileIcon = 'fa-brands fa-css3-alt'; } else { fileIcon = 'fa-regular fa-file-code'; }
+      return '<div class="tab-item ' + (p === activeFile ? 'active' : '') + '" data-tab="' + p + '">' +
+        '<i class="' + fileIcon + ' file-icon"></i>' +
+        '<span>' + name + '</span>' +
+        '<span class="close-tab" data-close="' + p + '"><i class="fa-solid fa-xmark"></i></span>' +
+        '</div>';
     }).join('');
     const activeTab = container.querySelector('.tab-item.active');
     if (activeTab) activeTab.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
@@ -338,9 +404,11 @@
     activeFile = path;
     renderEditor();
     renderTabs();
-    document.querySelectorAll('.tree-item.active').forEach(e => e.classList.remove('active'));
-    document.querySelector(`.tree-item[data-path="${path}"]`)?.classList.add('active');
-    document.getElementById('filePathDisplay').textContent = '/' + path;
+    document.querySelectorAll('.tree-item.active').forEach(function(e) { e.classList.remove('active'); });
+    var el = document.querySelector('.tree-item[data-path="' + path + '"]');
+    if (el) el.classList.add('active');
+    document.getElementById('breadcrumbText').textContent = '/' + path;
+    document.getElementById('statusPath').textContent = path;
   }
 
   function closeTab(path) {
@@ -353,7 +421,8 @@
     renderTabs();
     if (!activeFile) {
       document.getElementById('saveBtn').disabled = true;
-      document.getElementById('filePathDisplay').textContent = 'No file selected';
+      document.getElementById('breadcrumbText').textContent = 'No file selected';
+      document.getElementById('statusPath').textContent = 'Ready';
     }
   }
 
@@ -365,6 +434,7 @@
       textarea.style.display = 'none';
       gutter.innerHTML = '';
       empty.style.display = 'flex';
+      document.getElementById('statusLines').textContent = 'Ln 0';
       return;
     }
     empty.style.display = 'none';
@@ -379,10 +449,13 @@
     const textarea = document.getElementById('editorTextarea');
     const gutter = document.getElementById('editorGutter');
     const lines = textarea.value.split('\n').length;
-    gutter.innerHTML = Array.from({ length: lines }, (_, i) => `<div>${i + 1}</div>`).join('');
+    var html = '';
+    for (var i = 1; i <= lines; i++) { html += '<div>' + i + '</div>'; }
+    gutter.innerHTML = html;
+    document.getElementById('statusLines').textContent = 'Ln ' + lines + '  |  ' + textarea.value.length + ' chars';
   }
 
-  document.addEventListener('DOMContentLoaded', () => {
+  document.addEventListener('DOMContentLoaded', function() {
     const treeEl = document.getElementById('fileTree');
     if (treeEl) {
       treeEl.addEventListener('click', function(e) {
@@ -398,15 +471,15 @@
     if (tabContainer) {
       tabContainer.addEventListener('click', function(e) {
         const closeBtn = e.target.closest('.close-tab');
-        if (closeBtn) { e.stopPropagation(); const path = closeBtn.dataset.close; if (path) closeTab(path); return; }
+        if (closeBtn) { e.stopPropagation(); var path = closeBtn.dataset.close; if (path) closeTab(path); return; }
         const tab = e.target.closest('.tab-item');
-        if (tab) { const path = tab.dataset.tab; if (path) switchTab(path); }
+        if (tab) { var path = tab.dataset.tab; if (path) switchTab(path); }
       });
     }
     const textarea = document.getElementById('editorTextarea');
     if (textarea) {
-      textarea.addEventListener('input', () => { if (activeFile) openFiles[activeFile] = textarea.value; updateGutter(); });
-      textarea.addEventListener('scroll', () => { document.getElementById('editorGutter').scrollTop = textarea.scrollTop; });
+      textarea.addEventListener('input', function() { if (activeFile) openFiles[activeFile] = textarea.value; updateGutter(); });
+      textarea.addEventListener('scroll', function() { document.getElementById('editorGutter').scrollTop = textarea.scrollTop; });
     }
   });
 
@@ -417,7 +490,7 @@
       const res = await fetch('/api/save-file', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ project: PROJECT, filename: activeFile, content })
+        body: JSON.stringify({ project: PROJECT, filename: activeFile, content: content })
       });
       const data = await res.json();
       if (data.status === 'success') { openFiles[activeFile] = content; toast('Saved: ' + activeFile.split('/').pop(), 'success'); }
@@ -425,7 +498,7 @@
     } catch (e) { toast('Save failed', 'error'); }
   }
 
-  document.addEventListener('keydown', e => {
+  document.addEventListener('keydown', function(e) {
     if ((e.ctrlKey || e.metaKey) && e.key === 's') { e.preventDefault(); saveFile(); }
   });
 

@@ -620,6 +620,34 @@ def file_manager(project: str):
     )
 
 
+@app.route("/terminal/<project>")
+@login_required
+def terminal_page(project: str):
+    project = sanitize_filename(project)
+    extract_dir = Config.UPLOAD_DIR / session["username"] / project / "extracted"
+    if not is_safe_path(Config.UPLOAD_DIR / session["username"], extract_dir):
+        return redirect(url_for("index"))
+    return render_template(
+        "terminal.html",
+        project=project,
+        username=session["username"]
+    )
+
+
+@app.route("/packages/<project>")
+@login_required
+def packages_page(project: str):
+    project = sanitize_filename(project)
+    extract_dir = Config.UPLOAD_DIR / session["username"] / project / "extracted"
+    if not is_safe_path(Config.UPLOAD_DIR / session["username"], extract_dir):
+        return redirect(url_for("index"))
+    return render_template(
+        "packages.html",
+        project=project,
+        username=session["username"]
+    )
+
+
 # ---------------------------------------------------------------------------
 # File management API
 # ---------------------------------------------------------------------------

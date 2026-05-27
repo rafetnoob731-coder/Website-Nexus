@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Terminal — {{ project }} | NEXUS</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+  <link rel="stylesheet" href="/static/nexus.css" />
+  <style>
+    html,body{height:100%;overflow:hidden;background:#0B0E14}
+    .terminal-container{display:flex;flex-direction:column;height:100vh;max-width:1200px;margin:0 auto;padding:16px}
+    .terminal{background:#0B0E14;border:1px solid #1F2937;border-radius:16px;overflow:hidden;box-shadow:inset 0 0 100px rgba(0,212,255,0.03),0 20px 60px rgba(0,0,0,0.5);display:flex;flex-direction:column;flex:1}
+    .terminal-header{background:#111827;padding:12px 20px;border-bottom:1px solid #1F2937;display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
+    .terminal-title{font-size:13px;font-weight:600;color:#F9FAFB;display:flex;align-items:center;gap:10px}
+    .terminal-status{display:flex;align-items:center;gap:8px;font-size:12px;color:#6B7280}
+    .status-dot{width:8px;height:8px;border-radius:50%;background:#10B981;box-shadow:0 0 8px #10B981;animation:pulse 2s infinite}
+    @keyframes pulse{0%,100%{opacity:1}50%{opacity:0.5}}
+    .terminal-body{flex:1;padding:20px;overflow-y:auto;font-family:'JetBrains Mono','Fira Code',monospace;font-size:13px;line-height:1.7;color:#E5E7EB}
+    .terminal-body::-webkit-scrollbar{width:8px}
+    .terminal-body::-webkit-scrollbar-track{background:transparent}
+    .terminal-body::-webkit-scrollbar-thumb{background:#374151;border-radius:4px}
+    .terminal-body::-webkit-scrollbar-thumb:hover{background:#4B5563}
+    .terminal-line{margin-bottom:6px;display:flex;gap:12px;animation:lineIn 0.2s ease-out}
+    @keyframes lineIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+    .terminal-line.command{color:#F9FAFB}
+    .terminal-line.output{color:#9CA3AF}
+    .terminal-line.success{color:#4ADE80}
+    .terminal-line.warning{color:#FACC15}
+    .terminal-line.error{color:#FB7185}
+    .terminal-line.info{color:#22D3EE}
+    .terminal-prompt{color:#00D4FF;font-weight:600;white-space:nowrap}
+    .terminal-prompt::before{content:" nexus@nexus:~$ ";color:#4ADE80}
+    .terminal-cursor{display:inline-block;width:8px;height:18px;background:#00D4FF;animation:blink 1s step-end infinite;vertical-align:text-bottom;margin-left:2px}
+    @keyframes blink{0%,100%{opacity:1}50%{opacity:0}}
+    .log-timestamp{color:#6B7280;font-size:11px;margin-right:8px;flex-shrink:0}
+    .log-level{display:inline-block;padding:1px 6px;border-radius:4px;font-size:10px;font-weight:600;text-transform:uppercase;margin-right:8px;flex-shrink:0}
+    .log-level.info{background:rgba(34,211,238,0.15);color:#22D3EE}
+    .log-level.warn{background:rgba(250,204,21,0.15);color:#FACC15}
+    .log-level.error{background:rgba(251,113,133,0.15);color:#FB7185}
+    .log-level.success{background:rgba(74,222,128,0.15);color:#4ADE80}
+    .terminal-input-bar{background:#111827;border-top:1px solid #1F2937;padding:12px 20px;display:flex;align-items:center;gap:12px;flex-shrink:0}
+    .terminal-input-wrapper{flex:1;display:flex;align-items:center;background:#0B0E14;border:1px solid #1F2937;border-radius:10px;padding:10px 16px;gap:10px;transition:border-color 0.2s}
+    .terminal-input-wrapper:focus-within{border-color:#00D4FF;box-shadow:0 0 0 3px rgba(0,212,255,0.1)}
+    .terminal-input-icon{color:#00D4FF;font-size:14px;flex-shrink:0}
+    .terminal-input{flex:1;background:transparent;border:none;color:#F9FAFB;font-family:'JetBrains Mono',monospace;font-size:14px;outline:none}
+    .terminal-input::placeholder{color:#4B5563}
+    .send-btn{width:36px;height:36px;border-radius:10px;background:var(--gradient);border:none;color:#0B0E14;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all 0.2s;flex-shrink:0}
+    .send-btn:hover{box-shadow:0 4px 15px rgba(0,212,255,0.4);transform:scale(1.05)}
+    .send-btn:active{transform:scale(0.95)}
+    .log-filters{display:flex;gap:8px;padding:0 20px 12px;flex-wrap:wrap}
+    .filter-chip{padding:6px 14px;border-radius:20px;font-size:12px;font-weight:500;cursor:pointer;transition:all 0.2s;border:1px solid transparent;display:flex;align-items:center;gap:6px;background:#1A1F2E;color:#6B7280;border-color:#1F2937}
+    .filter-chip.active{background:rgba(0,212,255,0.15);color:#00D4FF;border-color:rgba(0,212,255,0.3)}
+    .filter-chip:hover:not(.active){background:#242B3D;color:#9CA3AF}
+    .chip-dot{width:6px;height:6px;border-radius:50%;display:inline-block}
+    .header-bar{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
+    .back-link{color:#9CA3AF;font-size:14px;display:flex;align-items:center;gap:6px;text-decoration:none;transition:color 0.2s}
+    .back-link:hover{color:#00D4FF}
+    @media(max-width:768px){.terminal-container{padding:8px}.terminal-body{padding:12px;font-size:12px}.terminal-header{padding:10px 14px}.terminal-input-bar{padding:10px 14px}.log-filters{padding:0 12px 8px}}
+  </style>
+</head>
+<body>
+<div class="terminal-container">
+  <div class="header-bar">
+    <a href="/" class="back-link"><i class="fa-solid fa-arrow-left"></i> Dashboard</a>
+    <span style="font-size:12px;color:#6B7280">{{ username }} / {{ project }}</span>
+  </div>
+
+  <div class="terminal">
+    <div class="terminal-header">
+      <div class="terminal-title">
+        <i class="fa-solid fa-terminal" style="color:#00D4FF"></i>
+        Terminal — {{ project }}
+      </div>
+      <div class="terminal-status">
+        <span class="status-dot"></span>
+        <span id="statusText">Connected</span>
+        <button class="filter-chip" onclick="clearTerm()" style="font-size:11px;padding:4px 10px"><i class="fa-solid fa-eraser"></i> Clear</button>
+      </div>
+    </div>
+
+    <div class="log-filters" id="logFilters">
+      <span class="filter-chip active" data-level="all" onclick="toggleFilter(this)"><span class="chip-dot" style="background:var(--accent)"></span> All</span>
+      <span class="filter-chip" data-level="info" onclick="toggleFilter(this)"><span class="chip-dot" style="background:#22D3EE"></span> Info</span>
+      <span class="filter-chip" data-level="success" onclick="toggleFilter(this)"><span class="chip-dot" style="background:#4ADE80"></span> Success</span>
+      <span class="filter-chip" data-level="warn" onclick="toggleFilter(this)"><span class="chip-dot" style="background:#FACC15"></span> Warning</span>
+      <span class="filter-chip" data-level="error" onclick="toggleFilter(this)"><span class="chip-dot" style="background:#FB7185"></span> Error</span>
+    </div>
+
+    <div class="terminal-body" id="termBody">
+      <div class="terminal-line info">
+        <span class="log-timestamp">[{{ now }}]</span>
+        <span class="log-level info">INFO</span>
+        <span>Terminal ready for <strong>{{ project }}</strong>. Type a command below.</span>
+      </div>
+    </div>
+
+    <div class="terminal-input-bar">
+      <div class="terminal-input-wrapper">
+        <span class="terminal-input-icon"><i class="fa-solid fa-chevron-right"></i></span>
+        <input type="text" class="terminal-input" id="cmdInput" placeholder="Enter command..." autofocus />
+      </div>
+      <button class="send-btn" onclick="sendCmd()" title="Send"><i class="fa-solid fa-play"></i></button>
+    </div>
+  </div>
+</div>
+
+<script>
+  const PROJECT = '{{ project }}';
+  let filter = 'all';
+
+  document.getElementById('cmdInput').addEventListener('keydown', function(e) {
+    if (e.key === 'Enter') sendCmd();
+  });
+
+  function toggleFilter(el) {
+    document.querySelectorAll('#logFilters .filter-chip').forEach(c => c.classList.remove('active'));
+    el.classList.add('active');
+    filter = el.dataset.level;
+  }
+
+  function addLine(text, type, level) {
+    if (filter !== 'all' && level && level !== filter) return;
+    const body = document.getElementById('termBody');
+    const line = document.createElement('div');
+    line.className = 'terminal-line ' + type;
+    if (level) {
+      const ts = document.createElement('span');
+      ts.className = 'log-timestamp';
+      ts.textContent = '[' + new Date().toLocaleTimeString() + ']';
+      line.appendChild(ts);
+      const lvl = document.createElement('span');
+      lvl.className = 'log-level ' + level;
+      lvl.textContent = level.toUpperCase();
+      line.appendChild(lvl);
+    }
+    const span = document.createElement('span');
+    span.textContent = text;
+    line.appendChild(span);
+    body.appendChild(line);
+    body.scrollTop = body.scrollHeight;
+  }
+
+  function sendCmd() {
+    const input = document.getElementById('cmdInput');
+    const cmd = input.value.trim();
+    if (!cmd) return;
+    input.value = '';
+    addLine(cmd, 'command', false);
+    fetch('/api/terminal', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({project: PROJECT, command: cmd})
+    }).then(function(r) { return r.json(); }).then(function(d) {
+      const output = d.output || '(no output)';
+      const lines = output.split('\n');
+      for (const l of lines) {
+        if (!l) continue;
+        let type = 'output';
+        if (d.status === 'error') {
+          if (l.toLowerCase().includes('error') || l.toLowerCase().includes('fail')) type = 'error';
+          else if (l.toLowerCase().includes('warn')) type = 'warning';
+          else type = 'output';
+        } else {
+          if (l.toLowerCase().includes('error') || l.toLowerCase().includes('fail')) type = 'error';
+          else if (l.toLowerCase().includes('warn') || l.toLowerCase().includes('warning')) type = 'warning';
+          else if (l.toLowerCase().includes('success')) type = 'success';
+          else type = 'output';
+        }
+        const levelMap = {error: 'error', warning: 'warn', success: 'success', output: 'info', command: false};
+        addLine(l, type, levelMap[type] || 'info');
+      }
+    }).catch(function(e) {
+      addLine('Error: ' + e.message, 'error', 'error');
+    });
+  }
+
+  function clearTerm() {
+    document.getElementById('termBody').innerHTML = '';
+    addLine('Terminal cleared.', 'info', 'info');
+  }
+
+  // Auto-focus
+  setTimeout(function() { document.getElementById('cmdInput').focus(); }, 300);
+</script>
+</body>
+</html>
